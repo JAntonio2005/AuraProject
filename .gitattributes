@@ -1,0 +1,9 @@
+# Normaliza texto
+* text=auto
+
+# Código/markdown siempre LF
+*.dart text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.md   text eol=lf
+*.gitignore text eol=lf
