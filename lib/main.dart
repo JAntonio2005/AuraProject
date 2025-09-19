@@ -15,8 +15,10 @@ class AuraApp extends StatelessWidget {
     return MaterialApp(
       title: 'Aura',
       debugShowCheckedModeBanner: false,
+
       theme: AppTheme.light,
       home: const HomePage(),
+
     );
   }
 }
