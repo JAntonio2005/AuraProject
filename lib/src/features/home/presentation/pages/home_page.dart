@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // LOGO (imagen real)
+                   
                     Image.asset(
                       'assets/images/iconDog.png',
                       width: 180,
