@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/register_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       body: Stack(
         children: [
           const _DogsBackgroundPlaceholder(),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -19,7 +19,6 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                   
                     Image.asset(
                       'assets/images/iconDog.png',
                       width: 180,
@@ -27,27 +26,27 @@ class HomePage extends StatelessWidget {
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 16),
-
                     Text(
                       'Bienvenido',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    Text('a',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      'a',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                     Text(
                       'Aura',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
+                        color: cs.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 24),
-
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 280),
                       child: Column(
@@ -56,22 +55,27 @@ class HomePage extends StatelessWidget {
                             width: double.infinity,
                             child: FilledButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('TODO: Iniciar sesión')),
+                                Navigator.pushNamed(
+                                  context,
+                                  LoginPage.routeName,
                                 );
                               },
                               child: const Text('Iniciar sesión'),
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text('o', style: Theme.of(context).textTheme.bodyMedium),
+                          Text(
+                            'o',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                           const SizedBox(height: 8),
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton(
                               onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('TODO: Registrarse')),
+                                Navigator.pushNamed(
+                                  context,
+                                  RegisterPage.routeName,
                                 );
                               },
                               child: const Text('Registrarse'),
@@ -107,7 +111,6 @@ class _DogsBackgroundPlaceholder extends StatelessWidget {
           ),
         ),
       ),
-
     );
   }
 }
