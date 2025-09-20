@@ -39,4 +39,6 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-TOken Docker.txt
+/android/app/debug
+/android/app/profile
+/android/app/release
