@@ -5,6 +5,8 @@ import 'src/features/home/presentation/pages/home_page.dart';
 // Rutas de auth (import por paquete)
 import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/register_page.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/new_password_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +31,8 @@ class AuraApp extends StatelessWidget {
         '/home': (_) => const HomePage(),
         LoginPage.routeName: (_) => const LoginPage(),
         RegisterPage.routeName: (_) => const RegisterPage(),
+        ForgotPasswordPage.routeName: (_) => const ForgotPasswordPage(),
+        NewPasswordPage.routeName: (_) => const NewPasswordPage(),
       },
     );
   }
