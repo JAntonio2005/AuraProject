@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'src/core/theme/app_theme.dart';
 import 'src/features/home/presentation/pages/home_page.dart';
+import 'src/features/result/presentation/pages/breed_detail_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,12 @@ class AuraApp extends StatelessWidget {
       title: 'Aura',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light, // Tema M3 centralizado
-      home: const HomePage(), // Arranca en Home
+      // TEMP: arranca directamente en Resultado para verlo apenas entrar
+      initialRoute: '/result',
+      routes: {
+        '/': (_) => const HomePage(),
+        '/result': (_) => const BreedDetailPage(), // Detalle/resultado de raza
+      },
     );
   }
 }
