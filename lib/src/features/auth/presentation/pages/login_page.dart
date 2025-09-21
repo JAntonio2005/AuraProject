@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -83,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   Text(
                     'Bienvenido a Aura',
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: .7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -136,7 +137,10 @@ class _LoginPageState extends State<LoginPage> {
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              // TODO: Navigator.pushNamed(context, '/forgot');
+                              Navigator.pushNamed(
+                                context,
+                                ForgotPasswordPage.routeName,
+                              );
                             },
                             child: const Text('Recuperar contraseña'),
                           ),
