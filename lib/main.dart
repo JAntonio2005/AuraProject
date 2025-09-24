@@ -21,6 +21,8 @@ import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.da
 // import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
 // import 'package:aura_pet/src/features/take_photo/presentation/pages/take_photo_page.dart';
 
+import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AuraApp());
@@ -60,6 +62,9 @@ class AuraApp extends StatelessWidget {
         // '/tomar-foto': (_) => const TomarFotoPage(),
         // '/take-photo': (_) => const TakePhotoPage(),
         // '/camera': (_) => const CameraPage(),
+        ProfilePage.routeName: (_) => const ProfilePage(),
+        // opcional alias:
+        '/perfil': (_) => const ProfilePage(),
       },
     );
   }
