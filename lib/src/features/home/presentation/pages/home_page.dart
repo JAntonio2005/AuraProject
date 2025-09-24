@@ -81,6 +81,20 @@ class HomePage extends StatelessWidget {
                               child: const Text('Registrarse'),
                             ),
                           ),
+
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/coleccion',
+                                ); // usa la ruta literal que registraste
+                              },
+                              child: const Text('Ir a Colección'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
