@@ -51,7 +51,11 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
       (c) => c.lensDirection == CameraLensDirection.back,
       orElse: () => cameras.first,
     );
-    final ctrl = CameraController(back, ResolutionPreset.medium, enableAudio: false);
+    final ctrl = CameraController(
+      back,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
     setState(() {
       _controller = ctrl;
       _initCameraFuture = ctrl.initialize();
@@ -108,9 +112,15 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
               children: [
                 const Icon(Icons.help_outline),
                 const SizedBox(width: 8),
-                const Text('Recomendaciones', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Recomendaciones',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
                 const Spacer(),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -121,7 +131,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Entendido')),
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Entendido'),
+              ),
             ),
           ],
         ),
@@ -154,11 +167,16 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                           : FutureBuilder<void>(
                               future: _initCameraFuture,
                               builder: (context, snap) {
-                                if (snap.connectionState != ConnectionState.done) {
-                                  return _placeholder(text: 'Inicializando cámara...');
+                                if (snap.connectionState !=
+                                    ConnectionState.done) {
+                                  return _placeholder(
+                                    text: 'Inicializando cámara...',
+                                  );
                                 }
                                 if (!(cam.value.isInitialized)) {
-                                  return _placeholder(text: 'Cámara no disponible');
+                                  return _placeholder(
+                                    text: 'Cámara no disponible',
+                                  );
                                 }
                                 return CameraPreview(cam);
                               },
@@ -207,7 +225,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                   tooltip: 'Subir desde galería',
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(16),
+                  ),
                   onPressed: _isScanning ? null : _takePictureAndScan,
                   child: const Icon(Icons.photo_camera_outlined, size: 28),
                 ),
@@ -219,18 +240,46 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
       ),
       // Barra inferior fija
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex, // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+        currentIndex:
+            _navIndex, // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Razas'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_camera_outlined), label: 'Cámara'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historial'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Razas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_camera_outlined),
+            label: 'Cámara',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historial',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
+          ),
         ],
         onTap: (i) {
-          if (i == _navIndex) return;
-          setState(() => _navIndex = i);
-          // TODO: integrar navegación real cuando estén listas las rutas compartidas
+          // Índices: 0=Razas (colección principal), 1=Cámara, 2=Historial, 3=Perfil
+          if (i == 3) {
+            Navigator.pushNamed(context, '/profile'); // <- Perfil
+            return;
+          }
+          if (i == 1) {
+            Navigator.pushNamed(context, '/capture'); // <- Cámara
+            return;
+          }
+          if (i == 2) {
+            // TODO: cuando creemos la pantalla de historial
+            // Navigator.pushNamed(context, '/history');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Historial pendiente')),
+            );
+            return;
+          }
+          // i == 0  -> estás en Razas/Inicio de esta sección
         },
       ),
     );
@@ -239,7 +288,9 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Widget _placeholder({String text = 'Vista de cámara (demo)'}) {
     return Container(
       color: Colors.black12,
-      child: Center(child: Text(text, style: const TextStyle(color: Colors.black54))),
+      child: Center(
+        child: Text(text, style: const TextStyle(color: Colors.black54)),
+      ),
     );
   }
 }
