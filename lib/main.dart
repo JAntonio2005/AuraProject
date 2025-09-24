@@ -14,6 +14,8 @@ import 'package:aura_pet/src/features/collection/presentation/pages/collection_p
 // Resultado IA
 import 'package:aura_pet/src/features/result/presentation/pages/breed_detail_page.dart';
 
+import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.dart';
+
 // TODO (siguiente paso): agregar import de la pantalla de cámara cuando confirmemos su ruta real.
 // import 'package:aura_pet/src/features/tomar_foto/presentation/pages/tomar_foto_page.dart';
 // import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
@@ -53,6 +55,8 @@ class AuraApp extends StatelessWidget {
         '/result': (_) => const BreedDetailPage(),
 
         // TODO (siguiente paso): registrar la ruta real de Tomar Foto
+        '/capture': (_) => const CapturePage(),
+        '/tomar-foto': (_) => const CapturePage(), // alias opcional
         // '/tomar-foto': (_) => const TomarFotoPage(),
         // '/take-photo': (_) => const TakePhotoPage(),
         // '/camera': (_) => const CameraPage(),
