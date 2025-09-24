@@ -11,7 +11,7 @@ class CapturePage extends StatefulWidget {
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   // Bottom bar: 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
-  int _navIndex = 1;
+  final int _navIndex = 0;
 
   CameraController? _controller;
   Future<void>? _initCameraFuture;

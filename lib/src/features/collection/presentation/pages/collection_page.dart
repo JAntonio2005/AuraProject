@@ -9,7 +9,7 @@ class CollectionPage extends StatefulWidget {
 class _CollectionPageState extends State<CollectionPage> {
   final TextEditingController _search = TextEditingController();
   // Índices: 0=Razas (principal, icono casa), 1=Cámara, 2=Historial, 3=Perfil
-  int _navIndex = 0;
+  final int _navIndex = 0;
 
   @override
   Widget build(BuildContext context) {

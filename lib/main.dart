@@ -20,6 +20,7 @@ import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.da
 // import 'package:aura_pet/src/features/tomar_foto/presentation/pages/tomar_foto_page.dart';
 // import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
 // import 'package:aura_pet/src/features/take_photo/presentation/pages/take_photo_page.dart';
+import 'package:aura_pet/src/features/history/presentation/pages/history_page.dart';
 
 import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
 
@@ -65,6 +66,8 @@ class AuraApp extends StatelessWidget {
         ProfilePage.routeName: (_) => const ProfilePage(),
         // opcional alias:
         '/perfil': (_) => const ProfilePage(),
+        HistoryPage.routeName: (_) => const HistoryPage(),
+        '/historial': (_) => const HistoryPage(), // alias opcional
       },
     );
   }
