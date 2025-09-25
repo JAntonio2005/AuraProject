@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'src/core/theme/app_theme.dart';
 import 'src/features/home/presentation/pages/home_page.dart';
-
+import 'package:hive_flutter/hive_flutter.dart';
 // Auth
 import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/register_page.dart';
