@@ -10,13 +10,12 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
-  // Bottom bar: 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
-  int _navIndex = 1;
+  // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+  final int _navIndex = 1;
 
   CameraController? _controller;
   Future<void>? _initCameraFuture;
   final ImagePicker _picker = ImagePicker();
-
   bool _isScanning = false;
 
   @override
@@ -33,7 +32,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Maneja lifecycle (pausar/reanudar cámara)
+  // Pausar/reanudar cámara según el ciclo de vida
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final cam = _controller;
@@ -46,16 +45,24 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   }
 
   void _initializeCamera() async {
-    final cameras = await availableCameras();
-    final back = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-    final ctrl = CameraController(back, ResolutionPreset.medium, enableAudio: false);
-    setState(() {
-      _controller = ctrl;
-      _initCameraFuture = ctrl.initialize();
-    });
+    try {
+      final cameras = await availableCameras();
+      final back = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+      final ctrl = CameraController(
+        back,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      setState(() {
+        _controller = ctrl;
+        _initCameraFuture = ctrl.initialize();
+      });
+    } catch (e) {
+      _showSnack('No se pudo inicializar la cámara: $e');
+    }
   }
 
   Future<void> _takePictureAndScan() async {
@@ -75,7 +82,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     if (_isScanning) return;
     try {
       final XFile? img = await _picker.pickImage(source: ImageSource.gallery);
-      if (img == null) return; // usuario canceló → NO “escaneando”
+      if (img == null) return; // usuario canceló
       await _scanFlow(img.path);
     } catch (e) {
       _showSnack('No se pudo abrir la galería: $e');
@@ -85,11 +92,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Future<void> _scanFlow(String imagePath) async {
     setState(() => _isScanning = true);
     _showSnack('Escaneando imagen...');
+    // Simulación (reemplazar por llamada a backend/IA)
     await Future.delayed(const Duration(seconds: 2));
     setState(() => _isScanning = false);
-    // No hay backend/IA: resultará en fallo (demo)
     _showSnack('No se pudo escanear la imagen (demo).');
-    // TODO: cuando haya backend, envíe imagePath y actúe según respuesta
   }
 
   void _showHelp() {
@@ -108,9 +114,15 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
               children: [
                 const Icon(Icons.help_outline),
                 const SizedBox(width: 8),
-                const Text('Recomendaciones', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Recomendaciones',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
                 const Spacer(),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -121,7 +133,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Entendido')),
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Entendido'),
+              ),
             ),
           ],
         ),
@@ -133,9 +148,27 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  void _onTapNav(int i) {
+    switch (i) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/collection');
+        break;
+      case 1:
+        // Ya estamos en /capture
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cam = _controller;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Tomar foto')),
       body: Column(
@@ -154,18 +187,23 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                           : FutureBuilder<void>(
                               future: _initCameraFuture,
                               builder: (context, snap) {
-                                if (snap.connectionState != ConnectionState.done) {
-                                  return _placeholder(text: 'Inicializando cámara...');
+                                if (snap.connectionState !=
+                                    ConnectionState.done) {
+                                  return _placeholder(
+                                    text: 'Inicializando cámara...',
+                                  );
                                 }
-                                if (!(cam.value.isInitialized)) {
-                                  return _placeholder(text: 'Cámara no disponible');
+                                if (!cam.value.isInitialized) {
+                                  return _placeholder(
+                                    text: 'Cámara no disponible',
+                                  );
                                 }
                                 return CameraPreview(cam);
                               },
                             ),
                     ),
                   ),
-                  // Ayuda (?)
+                  // Botón de ayuda
                   Positioned(
                     right: 8,
                     top: 8,
@@ -207,7 +245,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                   tooltip: 'Subir desde galería',
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(shape: const CircleBorder(), padding: const EdgeInsets.all(16)),
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(16),
+                  ),
                   onPressed: _isScanning ? null : _takePictureAndScan,
                   child: const Icon(Icons.photo_camera_outlined, size: 28),
                 ),
@@ -219,19 +260,27 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
       ),
       // Barra inferior fija
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex, // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+        currentIndex: _navIndex,
         type: BottomNavigationBarType.fixed,
+        onTap: _onTapNav,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Razas'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_camera_outlined), label: 'Cámara'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historial'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Razas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_camera_outlined),
+            label: 'Cámara',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historial',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
+          ),
         ],
-        onTap: (i) {
-          if (i == _navIndex) return;
-          setState(() => _navIndex = i);
-          // TODO: integrar navegación real cuando estén listas las rutas compartidas
-        },
       ),
     );
   }
@@ -239,7 +288,9 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Widget _placeholder({String text = 'Vista de cámara (demo)'}) {
     return Container(
       color: Colors.black12,
-      child: Center(child: Text(text, style: const TextStyle(color: Colors.black54))),
+      child: Center(
+        child: Text(text, style: const TextStyle(color: Colors.black54)),
+      ),
     );
   }
 }

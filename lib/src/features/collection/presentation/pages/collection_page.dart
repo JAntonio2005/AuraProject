@@ -9,7 +9,7 @@ class CollectionPage extends StatefulWidget {
 class _CollectionPageState extends State<CollectionPage> {
   final TextEditingController _search = TextEditingController();
   // Índices: 0=Razas (principal, icono casa), 1=Cámara, 2=Historial, 3=Perfil
-  int _navIndex = 0;
+  final int _navIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,8 @@ class _CollectionPageState extends State<CollectionPage> {
                 return Card(
                   child: ListTile(
                     leading: Container(
-                      width: 48, height: 48,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey.shade400),
                         borderRadius: BorderRadius.circular(8),
@@ -66,19 +67,42 @@ class _CollectionPageState extends State<CollectionPage> {
         currentIndex: _navIndex,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined),  label: 'Razas'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo_camera_outlined), label: 'Cámara'),
-          BottomNavigationBarItem(icon: Icon(Icons.history),        label: 'Historial'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Perfil'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Razas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_camera_outlined),
+            label: 'Cámara',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historial',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
+          ),
         ],
         onTap: (i) {
-          if (i == _navIndex) return;
-          setState(() => _navIndex = i);
-          // TODO: cuando estén las rutas reales, navegue según i:
-          // if (i == 0) Navigator.pushNamed(context, '/collection'); // Razas (esta)
-          // if (i == 1) Navigator.pushNamed(context, '/capture');
-          // if (i == 2) Navigator.pushNamed(context, '/history');
-          // if (i == 3) Navigator.pushNamed(context, '/profile');
+          // Índices: 0=Razas (colección principal), 1=Cámara, 2=Historial, 3=Perfil
+          if (i == 3) {
+            Navigator.pushNamed(context, '/profile'); // <- Perfil
+            return;
+          }
+          if (i == 1) {
+            Navigator.pushNamed(context, '/capture'); // <- Cámara
+            return;
+          }
+          if (i == 2) {
+            // TODO: cuando creemos la pantalla de historial
+            // Navigator.pushNamed(context, '/history');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Historial pendiente')),
+            );
+            return;
+          }
+          // i == 0  -> estás en Razas/Inicio de esta sección
         },
       ),
     );

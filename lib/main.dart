@@ -21,6 +21,10 @@ import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.da
 // import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
 // import 'package:aura_pet/src/features/take_photo/presentation/pages/take_photo_page.dart';
 
+import 'package:aura_pet/src/features/history/presentation/pages/history_page.dart';
+
+import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const AuraApp());
@@ -39,27 +43,32 @@ class AuraApp extends StatelessWidget {
       home: const HomePage(),
 
       routes: {
-        '/home': (_) => const HomePage(),
+        '/home': (context) => const HomePage(),
 
         // Auth
-        LoginPage.routeName: (_) => const LoginPage(),
-        RegisterPage.routeName: (_) => const RegisterPage(),
-        ForgotPasswordPage.routeName: (_) => const ForgotPasswordPage(),
-        NewPasswordPage.routeName: (_) => const NewPasswordPage(),
+        LoginPage.routeName: (context) => const LoginPage(),
+        RegisterPage.routeName: (context) => const RegisterPage(),
+        ForgotPasswordPage.routeName: (context) => const ForgotPasswordPage(),
+        NewPasswordPage.routeName: (context) => const NewPasswordPage(),
 
-        // Colección (alias en español y la original por si la usan)
-        '/coleccion': (_) => const CollectionPage(),
-        '/collection': (_) => const CollectionPage(),
+        // Colección
+        '/collection': (context) => const CollectionPage(),
+        '/coleccion': (context) => const CollectionPage(),
+
+        // Cámara / Captura
+        '/capture': (context) => const CapturePage(),
+        '/tomar-foto': (context) => const CapturePage(),
 
         // Resultado IA
-        '/result': (_) => const BreedDetailPage(),
+        '/result': (context) => const BreedDetailPage(),
 
-        // TODO (siguiente paso): registrar la ruta real de Tomar Foto
-        '/capture': (_) => const CapturePage(),
-        '/tomar-foto': (_) => const CapturePage(), // alias opcional
-        // '/tomar-foto': (_) => const TomarFotoPage(),
-        // '/take-photo': (_) => const TakePhotoPage(),
-        // '/camera': (_) => const CameraPage(),
+        // Perfil
+        '/profile': (context) => const ProfilePage(),
+        '/perfil': (context) => const ProfilePage(),
+
+        // Historial
+        '/history': (context) => const HistoryPage(),
+        '/historial': (context) => const HistoryPage(),
       },
     );
   }
