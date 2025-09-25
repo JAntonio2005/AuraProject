@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                           decoration: const InputDecoration(
                             labelText: 'Correo',
-                            hintText: 'holomundo@gmail.com',
+                            hintText: 'holamundo@gmail.com',
                             prefixIcon: Icon(Icons.alternate_email),
                           ),
                           validator: _validateEmail,
@@ -120,8 +120,8 @@ class _LoginPageState extends State<LoginPage> {
                             labelText: 'Contraseña',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              onPressed:
-                                  () => setState(() => _obscure = !_obscure),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
                               icon: Icon(
                                 _obscure
                                     ? Icons.visibility
@@ -151,16 +151,15 @@ class _LoginPageState extends State<LoginPage> {
                           height: 48,
                           child: FilledButton(
                             onPressed: _loading ? null : _onSubmit,
-                            child:
-                                _loading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Text('Continuar'),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Continuar'),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -173,7 +172,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                // TODO: Navigator.pushNamed(context, '/register');
+                                Navigator.pushNamed(context, '/register');
                               },
                               child: const Text('¡Crea la tuya!'),
                             ),
