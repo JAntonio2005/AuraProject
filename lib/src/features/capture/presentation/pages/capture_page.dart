@@ -10,13 +10,12 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
-  // Bottom bar: 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
-  final int _navIndex = 0;
+  // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+  final int _navIndex = 1;
 
   CameraController? _controller;
   Future<void>? _initCameraFuture;
   final ImagePicker _picker = ImagePicker();
-
   bool _isScanning = false;
 
   @override
@@ -33,7 +32,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Maneja lifecycle (pausar/reanudar cámara)
+  // Pausar/reanudar cámara según el ciclo de vida
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final cam = _controller;
@@ -46,20 +45,24 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   }
 
   void _initializeCamera() async {
-    final cameras = await availableCameras();
-    final back = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-    final ctrl = CameraController(
-      back,
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
-    setState(() {
-      _controller = ctrl;
-      _initCameraFuture = ctrl.initialize();
-    });
+    try {
+      final cameras = await availableCameras();
+      final back = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+      final ctrl = CameraController(
+        back,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      setState(() {
+        _controller = ctrl;
+        _initCameraFuture = ctrl.initialize();
+      });
+    } catch (e) {
+      _showSnack('No se pudo inicializar la cámara: $e');
+    }
   }
 
   Future<void> _takePictureAndScan() async {
@@ -79,7 +82,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     if (_isScanning) return;
     try {
       final XFile? img = await _picker.pickImage(source: ImageSource.gallery);
-      if (img == null) return; // usuario canceló → NO “escaneando”
+      if (img == null) return; // usuario canceló
       await _scanFlow(img.path);
     } catch (e) {
       _showSnack('No se pudo abrir la galería: $e');
@@ -89,11 +92,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Future<void> _scanFlow(String imagePath) async {
     setState(() => _isScanning = true);
     _showSnack('Escaneando imagen...');
+    // Simulación (reemplazar por llamada a backend/IA)
     await Future.delayed(const Duration(seconds: 2));
     setState(() => _isScanning = false);
-    // No hay backend/IA: resultará en fallo (demo)
     _showSnack('No se pudo escanear la imagen (demo).');
-    // TODO: cuando haya backend, envíe imagePath y actúe según respuesta
   }
 
   void _showHelp() {
@@ -146,9 +148,27 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  void _onTapNav(int i) {
+    switch (i) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/collection');
+        break;
+      case 1:
+        // Ya estamos en /capture
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cam = _controller;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Tomar foto')),
       body: Column(
@@ -173,7 +193,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                                     text: 'Inicializando cámara...',
                                   );
                                 }
-                                if (!(cam.value.isInitialized)) {
+                                if (!cam.value.isInitialized) {
                                   return _placeholder(
                                     text: 'Cámara no disponible',
                                   );
@@ -183,7 +203,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                             ),
                     ),
                   ),
-                  // Ayuda (?)
+                  // Botón de ayuda
                   Positioned(
                     right: 8,
                     top: 8,
@@ -240,9 +260,9 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
       ),
       // Barra inferior fija
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex:
-            _navIndex, // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+        currentIndex: _navIndex,
         type: BottomNavigationBarType.fixed,
+        onTap: _onTapNav,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -261,26 +281,6 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
             label: 'Perfil',
           ),
         ],
-        onTap: (i) {
-          // Índices: 0=Razas (colección principal), 1=Cámara, 2=Historial, 3=Perfil
-          if (i == 3) {
-            Navigator.pushNamed(context, '/profile'); // <- Perfil
-            return;
-          }
-          if (i == 1) {
-            Navigator.pushNamed(context, '/capture'); // <- Cámara
-            return;
-          }
-          if (i == 2) {
-            // TODO: cuando creemos la pantalla de historial
-            // Navigator.pushNamed(context, '/history');
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Historial pendiente')),
-            );
-            return;
-          }
-          // i == 0  -> estás en Razas/Inicio de esta sección
-        },
       ),
     );
   }
