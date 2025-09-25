@@ -1,141 +1,74 @@
 import 'package:flutter/material.dart';
+import 'src/core/theme/app_theme.dart';
+import 'src/features/home/presentation/pages/home_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+// Auth
 import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/register_page.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
+import 'package:aura_pet/src/features/auth/presentation/pages/new_password_page.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+// Colección
+import 'package:aura_pet/src/features/collection/presentation/pages/collection_page.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      body: Stack(
-        children: [
-          const _DogsBackgroundPlaceholder(),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/images/iconDog.png',
-                      width: 180,
-                      height: 180,
-                      fit: BoxFit.contain,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Bienvenido',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'a',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      'Aura',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 280),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  LoginPage.routeName,
-                                );
-                              },
-                              child: const Text('Iniciar sesión'),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'o',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  RegisterPage.routeName,
-                                );
-                              },
-                              child: const Text('Registrarse'),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // 🔹 Nuevo botón temporal de invitado
-                          SizedBox(
-                            width: double.infinity,
-                            child: TextButton(
-                              onPressed: () {
-                                // Salta directo al resto de la app
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/collection',
-                                );
-                              },
-                              child: const Text('Entrar como invitado'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// Resultado IA
+import 'package:aura_pet/src/features/result/presentation/pages/breed_detail_page.dart';
+
+import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.dart';
+
+// TODO: agregar import de la pantalla de cámara cuando confirmemos su ruta real.
+// import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
+
+import 'package:aura_pet/src/features/history/presentation/pages/history_page.dart';
+import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const AuraApp());
 }
 
-class _DogsBackgroundPlaceholder extends StatelessWidget {
-  const _DogsBackgroundPlaceholder();
+class AuraApp extends StatelessWidget {
+  const AuraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PositionedFill(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey.shade300, Colors.grey.shade100],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Aura',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+
+      // Arranca en la pantalla de bienvenida (HomePage con botones)
+      home: const HomePage(),
+
+      routes: {
+        '/home': (context) => const HomePage(),
+
+        // Auth
+        LoginPage.routeName: (context) => const LoginPage(),
+        RegisterPage.routeName: (context) => const RegisterPage(),
+        ForgotPasswordPage.routeName: (context) => const ForgotPasswordPage(),
+        NewPasswordPage.routeName: (context) => const NewPasswordPage(),
+
+        // Colección
+        '/collection': (context) => const CollectionPage(),
+        '/coleccion': (context) => const CollectionPage(),
+
+        // Cámara / Captura
+        '/capture': (context) => const CapturePage(),
+        '/tomar-foto': (context) => const CapturePage(),
+
+        // Resultado IA
+        '/result': (context) => const BreedDetailPage(),
+
+        // Perfil
+        '/profile': (context) => const ProfilePage(),
+        '/perfil': (context) => const ProfilePage(),
+
+        // Historial
+        '/history': (context) => const HistoryPage(),
+        '/historial': (context) => const HistoryPage(),
+      },
     );
-  }
-}
-
-/// Helper para ocupar todo el espacio (equivalente a Positioned.fill)
-class PositionedFill extends StatelessWidget {
-  final Widget child;
-  const PositionedFill({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(top: 0, left: 0, right: 0, bottom: 0, child: child);
   }
 }
