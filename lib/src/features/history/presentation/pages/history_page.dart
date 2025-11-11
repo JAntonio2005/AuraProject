@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/widgets/app_background.dart'; // <-- ajuste el prefijo
 
 class HistoryPage extends StatelessWidget {
   static const routeName = '/history';
@@ -18,35 +19,39 @@ class HistoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Historial')),
-      body: SafeArea(
-        child: items.isEmpty
-            ? Center(
-                child: Text(
-                  'Aún no hay resultados',
-                  style: t.textTheme.titleMedium?.copyWith(
-                    color: t.colorScheme.onSurface.withValues(alpha: .7),
+      // Fondo SOLO en body
+      body: AppBackground(
+        opacity: 0.10,
+        child: SafeArea(
+          child: items.isEmpty
+              ? Center(
+                  child: Text(
+                    'Aún no hay resultados',
+                    style: t.textTheme.titleMedium?.copyWith(
+                      color: t.colorScheme.onSurface.withValues(alpha: .7),
+                    ),
                   ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final it = items[i];
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.pets)),
+                      title: Text(it.title),
+                      subtitle: Text(it.subtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Detalle pendiente')),
+                        );
+                      },
+                    );
+                  },
                 ),
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: items.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, i) {
-                  final it = items[i];
-                  return ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.pets)),
-                    title: Text(it.title),
-                    subtitle: Text(it.subtitle),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Detalle pendiente')),
-                      );
-                    },
-                  );
-                },
-              ),
+        ),
       ),
     );
   }

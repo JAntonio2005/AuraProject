@@ -68,3 +68,5 @@ flutter:
 
   assets:
     - assets/images/iconDog.png
+    - assets/images/bg_paws.png
+    - assets/images/bg_dogs.png

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/widgets/app_background.dart'; // <-- ajuste el prefijo de paquete
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -15,54 +16,65 @@ class _CollectionPageState extends State<CollectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Colección de Razas')),
-      body: Column(
-        children: [
-          // Buscador
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _search,
-              decoration: const InputDecoration(
-                hintText: 'search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
+      // Fondo SOLO en el body
+      body: AppBackground(
+        opacity: 0.10, // suave
+        child: Column(
+          children: [
+            // Buscador
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: TextField(
+                controller: _search,
+                decoration: const InputDecoration(
+                  hintText: 'search',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onSubmitted:
+                    (_) {}, // TODO: conectar a repo cuando haya backend
               ),
-              onSubmitted: (_) {}, // TODO: conectar a repo cuando haya backend
             ),
-          ),
-          // Lista placeholder
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: 8,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (_, i) {
-                return Card(
-                  child: ListTile(
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(8),
+            // Lista placeholder
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                itemCount: 8,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (_, i) {
+                  return Card(
+                    child: ListTile(
+                      leading: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'img',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: const Text('img', style: TextStyle(fontSize: 12)),
+                      title: const Text('Nombre de la raza'),
+                      subtitle: const Text('Descripción'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {}, // TODO: ir a detalle
                     ),
-                    title: const Text('Nombre de la raza'),
-                    subtitle: const Text('Descripción'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {}, // TODO: ir a detalle
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
 
-      // Barra inferior fija (4 íconos)
+      // Barra inferior fija (4 íconos) - SIN fondo
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _navIndex,
         type: BottomNavigationBarType.fixed,
@@ -85,13 +97,12 @@ class _CollectionPageState extends State<CollectionPage> {
           ),
         ],
         onTap: (i) {
-          // Índices: 0=Razas (colección principal), 1=Cámara, 2=Historial, 3=Perfil
           if (i == 3) {
-            Navigator.pushNamed(context, '/profile'); // <- Perfil
+            Navigator.pushNamed(context, '/profile'); // Perfil
             return;
           }
           if (i == 1) {
-            Navigator.pushNamed(context, '/capture'); // <- Cámara
+            Navigator.pushNamed(context, '/capture'); // Cámara
             return;
           }
           if (i == 2) {
@@ -102,7 +113,7 @@ class _CollectionPageState extends State<CollectionPage> {
             );
             return;
           }
-          // i == 0  -> estás en Razas/Inicio de esta sección
+          // i == 0 -> ya está en Razas
         },
       ),
     );
