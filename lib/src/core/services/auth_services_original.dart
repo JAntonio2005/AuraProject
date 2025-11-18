@@ -49,28 +49,19 @@ class AuthService extends ChangeNotifier {
     required String fullName,
   }) async {
     try {
-      debugPrint('[AuthService] Intentando registrar $email');
-
       final res = await _dio.post(
         '/auth/register',
-        data: {
-          // 👇 Igual que en Postman
-          'email': email,
-          'password': password,
-          'full_name': fullName,
-        },
+        data: {'email': email, 'password': password, 'full_name': fullName},
       );
 
-      debugPrint('[AuthService] Respuesta register: ${res.statusCode}');
-      debugPrint('[AuthService] Body: ${res.data}');
-
-      // Si tu backend devuelve el usuario, podrías setear _user aquí
+      if (kDebugMode) {
+        print('[AuthService] Registro OK: ${res.statusCode}');
+      }
+      // si tu backend devuelve el usuario aquí puedes actualizar _user
     } on DioException catch (e) {
-      debugPrint('REGISTER Dio type: ${e.type}');
-      debugPrint('REGISTER Dio message: ${e.message}');
-      debugPrint('REGISTER Dio response: ${e.response?.data}');
-      debugPrint('REGISTER Dio url: ${e.requestOptions.uri}');
-
+      if (kDebugMode) {
+        print('[AuthService] Error al registrar: ${e.response?.data}');
+      }
       throw Exception(_mapError(e));
     }
   }
@@ -118,11 +109,6 @@ class AuthService extends ChangeNotifier {
       if (kDebugMode) {
         print('[AuthService] Error al hacer login: ${e.response?.data}');
       }
-      debugPrint('Dio type: ${e.type}');
-      debugPrint('Dio message: ${e.message}');
-      debugPrint('Dio error: ${e.error}');
-      debugPrint('Dio url: ${e.requestOptions.uri}');
-
       throw Exception(_mapError(e));
     }
   }
@@ -169,14 +155,17 @@ class AuthService extends ChangeNotifier {
   // ===========================
   String _mapError(DioException e) {
     final status = e.response?.statusCode;
-    final msg = e.message ?? '';
+    final detail = e.response?.data is Map
+        ? (e.response?.data['detail']?.toString() ?? '')
+        : '';
 
-    if (status == null) {
-      return 'No se pudo conectar con el servidor ($msg)';
+    if (status == 400 || status == 401) {
+      return detail.isNotEmpty ? detail : 'Credenciales inválidas';
     }
-
-    if (status == 400 || status == 401) return 'Credenciales inválidas';
-    if (status == 409) return 'El usuario ya existe';
+    if (status == 409) {
+      return detail.isNotEmpty ? detail : 'El usuario ya existe';
+    }
+    if (status == null) return 'Error de red (sin respuesta del servidor)';
     return 'Error de red ($status)';
   }
 }

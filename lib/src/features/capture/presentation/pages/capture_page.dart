@@ -1,7 +1,13 @@
+import 'dart:io'; // 👈 NUEVO
+import 'package:aura_pet/src/features/result/presentation/pages/prediction_detail_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:aura_pet/src/widgets/app_background.dart'; // <-- ajuste el prefijo
+
+import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/services/predict_service.dart'; // 👈 NUEVO
+import 'package:aura_pet/src/core/models/predict_response.dart'; // 👈 NUEVO
 
 class CapturePage extends StatefulWidget {
   const CapturePage({super.key});
@@ -18,6 +24,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Future<void>? _initCameraFuture;
   final ImagePicker _picker = ImagePicker();
   bool _isScanning = false;
+
+  final _predictService = PredictService(); // 👈 NUEVO
+  PredictResponse?
+  _lastResult; // 👈 opcional, por si luego quieres mostrar detalles
 
   @override
   void initState() {
@@ -90,11 +100,35 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   }
 
   Future<void> _scanFlow(String imagePath) async {
+    if (_isScanning) return;
     setState(() => _isScanning = true);
+
     _showSnack('Escaneando imagen...');
-    await Future.delayed(const Duration(seconds: 2)); // demo
-    setState(() => _isScanning = false);
-    _showSnack('No se pudo escanear la imagen (demo).');
+
+    try {
+      final file = File(imagePath);
+
+      final result = await _predictService.predict(file);
+      _lastResult = result;
+
+      if (!mounted) return;
+
+      Navigator.pushNamed(
+        context,
+        PredictionDetailPage.routeName,
+        arguments: PredictionDetailArgs(
+          imagePath: imagePath,
+          prediction: result,
+        ),
+      );
+    } catch (e) {
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showSnack('No se pudo escanear la imagen: $msg');
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+    }
   }
 
   void _showHelp() {
@@ -128,7 +162,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
             const Text('• Iluminación uniforme.'),
             const Text('• Perro centrado y enfocado.'),
             const Text('• Fondo simple.'),
-            const Text('• Evite movimiento al disparar.'),
+            const Text('• Evita movimiento al disparar.'),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,

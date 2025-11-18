@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:aura_pet/src/widgets/slow_bg.dart'; // <-- fondo con paneo/crossfade
+import 'package:aura_pet/src/core/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -16,6 +17,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -42,20 +45,30 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _onSubmit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text.trim();
+
     setState(() => _loading = true);
     try {
-      // TODO: conecta con tu servicio de autenticación
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      // 🧠 Llamamos a FastAPI via AuthService
+      await _authService.login(email: email, password: password);
+
       if (!mounted) return;
+
+      // Mensaje de éxito
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('¡Bienvenido!')));
-      // Navigator.pushReplacementNamed(context, '/home');
+      ).showSnackBar(const SnackBar(content: Text('¡Bienvenido! 😎')));
+
+      // Aquí ya tienes el token guardado en secure storage.
+      // Navega a tu pantalla principal (ajusta la ruta si usas otra):
+      Navigator.pushReplacementNamed(context, '/collection');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('No se pudo iniciar sesión: $e')));
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo iniciar sesión: $msg')),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
             child: SlowBackground(
               images: [
                 AssetImage('assets/images/bg_dogs.png'),
-                // Puede agregar más imágenes aquí para crossfade:
+                // Puedes agregar más imágenes aquí para crossfade:
                 // AssetImage('assets/images/bg_paws.png'),
               ],
               panDuration: Duration(seconds: 18),

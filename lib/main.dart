@@ -17,6 +17,8 @@ import 'package:aura_pet/src/features/result/presentation/pages/breed_detail_pag
 
 import 'package:aura_pet/src/features/capture/presentation/pages/capture_page.dart';
 
+import 'package:aura_pet/src/features/result/presentation/pages/prediction_detail_page.dart';
+
 // TODO: agregar import de la pantalla de cámara cuando confirmemos su ruta real.
 // import 'package:aura_pet/src/features/camera/presentation/pages/camera_page.dart';
 
@@ -49,7 +51,7 @@ class AuraApp extends StatelessWidget {
         RegisterPage.routeName: (context) => const RegisterPage(),
         ForgotPasswordPage.routeName: (context) => const ForgotPasswordPage(),
         NewPasswordPage.routeName: (context) => const NewPasswordPage(),
-
+        PredictionDetailPage.routeName: (_) => const PredictionDetailPage(),
         // Colección
         '/collection': (context) => const CollectionPage(),
         '/coleccion': (context) => const CollectionPage(),
