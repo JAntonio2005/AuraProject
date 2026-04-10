@@ -10,7 +10,7 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
-  // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+  // 0=Razas, 1=Cámara (esta), 2=Instituciones, 3=Perfil
   final int _navIndex = 1;
 
   CameraController? _controller;
@@ -157,7 +157,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         // Ya estamos en /capture
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/history');
+        Navigator.pushReplacementNamed(context, '/institutions');
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/profile');
@@ -252,7 +252,14 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                   onPressed: _isScanning ? null : _takePictureAndScan,
                   child: const Icon(Icons.photo_camera_outlined, size: 28),
                 ),
-                const SizedBox(width: 32),
+                IconButton(
+                  iconSize: 32,
+                  icon: const Icon(Icons.history),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/history');
+                  },
+                  tooltip: 'Historial',
+                ),
               ],
             ),
           ),
@@ -264,17 +271,14 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         type: BottomNavigationBarType.fixed,
         onTap: _onTapNav,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Razas',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.pets), label: 'Razas'),
           BottomNavigationBarItem(
             icon: Icon(Icons.photo_camera_outlined),
             label: 'Cámara',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Historial',
+            icon: Icon(Icons.favorite_outline),
+            label: 'Instituciones',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

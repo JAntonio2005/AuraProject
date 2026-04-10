@@ -81,6 +81,22 @@ class HomePage extends StatelessWidget {
                               child: const Text('Registrarse'),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                // Acceso temporal sin autenticación.
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/collection',
+                                  (route) => false,
+                                );
+                              },
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text('Continuar como invitado'),
+                            ),
+                          ),
                         ],
                       ),
                     ),
