@@ -74,6 +74,27 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _onGuestContinue() async {
+    setState(() => _loading = true);
+    try {
+      _authService.signInAsGuest();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ingresaste como invitado')));
+      Navigator.pushReplacementNamed(context, '/collection');
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo iniciar como invitado: $msg')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -198,6 +219,16 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       )
                                     : const Text('Continuar'),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 44,
+                              child: OutlinedButton.icon(
+                                onPressed: _loading ? null : _onGuestContinue,
+                                icon: const Icon(Icons.person_outline),
+                                label: const Text('Entrar como invitado'),
                               ),
                             ),
                             const SizedBox(height: 16),
