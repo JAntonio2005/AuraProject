@@ -1,4 +1,5 @@
-package com.example.aura_pet
+package com.joshi.aura
+
 
 import io.flutter.embedding.android.FlutterActivity
 

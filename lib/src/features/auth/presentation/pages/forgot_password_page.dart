@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/new_password_page.dart';
+import 'package:aura_pet/src/core/routes/services/auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   static const routeName = '/forgot';
@@ -12,6 +13,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
+  final _authService = AuthService();
   bool _loading = false;
 
   @override
@@ -31,10 +33,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Future<void> _onSubmit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final email = _emailCtrl.text.trim();
+
     setState(() => _loading = true);
     try {
-      // TODO: Llamar a tu backend para enviar enlace o código de verificación
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      await _authService.requestPasswordReset(email: email);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -42,14 +45,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           content: Text('Te enviamos un enlace/código a tu correo'),
         ),
       );
-      // 👉 navegar a Nueva contraseña (sin código por ahora)
+
       Navigator.pushNamed(context, NewPasswordPage.routeName);
-      // En el siguiente paso haremos la pantalla de "Nueva contraseña" y navegaremos allí.
-      // Navigator.pushNamed(context, '/new-password');
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo procesar la solicitud: $e')),
+        SnackBar(content: Text('No se pudo procesar la solicitud: $msg')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -108,16 +110,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           height: 48,
                           child: FilledButton(
                             onPressed: _loading ? null : _onSubmit,
-                            child:
-                                _loading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Text('Continuar'),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Continuar'),
                           ),
                         ),
                         const SizedBox(height: 12),

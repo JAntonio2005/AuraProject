@@ -1,6 +1,12 @@
+import 'dart:io'; // 👈 NUEVO
+import 'package:aura_pet/src/features/result/presentation/pages/prediction_detail_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/routes/services/predict_service.dart'; // 👈 NUEVO
 
 class CapturePage extends StatefulWidget {
   const CapturePage({super.key});
@@ -18,6 +24,11 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   final ImagePicker _picker = ImagePicker();
   bool _isScanning = false;
 
+  final _predictService = PredictService(); // 👈 NUEVO
+
+  static const int _maxImageSizeInMB = 5;
+  static const int _maxImageBytes = _maxImageSizeInMB * 1024 * 1024;
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +43,6 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Pausar/reanudar cámara según el ciclo de vida
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final cam = _controller;
@@ -82,7 +92,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     if (_isScanning) return;
     try {
       final XFile? img = await _picker.pickImage(source: ImageSource.gallery);
-      if (img == null) return; // usuario canceló
+      if (img == null) return;
       await _scanFlow(img.path);
     } catch (e) {
       _showSnack('No se pudo abrir la galería: $e');
@@ -90,12 +100,45 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   }
 
   Future<void> _scanFlow(String imagePath) async {
-    setState(() => _isScanning = true);
-    _showSnack('Escaneando imagen...');
-    // Simulación (reemplazar por llamada a backend/IA)
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isScanning = false);
-    _showSnack('No se pudo escanear la imagen (demo).');
+    if (_isScanning) return;
+
+    // 🔹 Validar tamaño máximo de la imagen antes de escanear
+    try {
+      final file = File(imagePath);
+      final int sizeInBytes = await file.length();
+
+      if (sizeInBytes > _maxImageBytes) {
+        final sizeInMB = (sizeInBytes / (1024 * 1024)).toStringAsFixed(2);
+
+        _showSnack(
+          'La imagen es muy pesada (${sizeInMB} MB). El máximo es $_maxImageSizeInMB MB.',
+        );
+        return;
+      }
+
+      setState(() => _isScanning = true);
+      _showSnack('Escaneando imagen...');
+
+      final result = await _predictService.predict(file);
+
+      if (!mounted) return;
+
+      Navigator.pushNamed(
+        context,
+        PredictionDetailPage.routeName,
+        arguments: PredictionDetailArgs(
+          imagePath: imagePath,
+          prediction: result,
+        ),
+      );
+    } catch (e) {
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      _showSnack('No se pudo escanear la imagen: $msg');
+    } finally {
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+    }
   }
 
   void _showHelp() {
@@ -129,7 +172,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
             const Text('• Iluminación uniforme.'),
             const Text('• Perro centrado y enfocado.'),
             const Text('• Fondo simple.'),
-            const Text('• Evite movimiento al disparar.'),
+            const Text('• Evita movimiento al disparar.'),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
@@ -154,8 +197,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         Navigator.pushReplacementNamed(context, '/collection');
         break;
       case 1:
-        // Ya estamos en /capture
-        break;
+        break; // ya estamos aquí
       case 2:
         Navigator.pushReplacementNamed(context, '/history');
         break;
@@ -171,94 +213,101 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tomar foto')),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Stack(
-                children: [
-                  // Preview real de cámara (o placeholder mientras inicia)
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: cam == null
-                          ? _placeholder()
-                          : FutureBuilder<void>(
-                              future: _initCameraFuture,
-                              builder: (context, snap) {
-                                if (snap.connectionState !=
-                                    ConnectionState.done) {
-                                  return _placeholder(
-                                    text: 'Inicializando cámara...',
-                                  );
-                                }
-                                if (!cam.value.isInitialized) {
-                                  return _placeholder(
-                                    text: 'Cámara no disponible',
-                                  );
-                                }
-                                return CameraPreview(cam);
-                              },
+      // Fondo SOLO en body
+      body: AppBackground(
+        opacity: 0.12,
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Stack(
+                  children: [
+                    // Preview de cámara o placeholder
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: cam == null
+                            ? _placeholder()
+                            : FutureBuilder<void>(
+                                future: _initCameraFuture,
+                                builder: (context, snap) {
+                                  if (snap.connectionState !=
+                                      ConnectionState.done) {
+                                    return _placeholder(
+                                      text: 'Inicializando cámara...',
+                                    );
+                                  }
+                                  if (!cam.value.isInitialized) {
+                                    return _placeholder(
+                                      text: 'Cámara no disponible',
+                                    );
+                                  }
+                                  return CameraPreview(cam);
+                                },
+                              ),
+                      ),
+                    ),
+                    // Botón de ayuda
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: _showHelp,
+                        tooltip: 'Ayuda',
+                      ),
+                    ),
+                    // Marco visual
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Center(
+                          child: Container(
+                            width: 220,
+                            height: 220,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.white70,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                    ),
-                  ),
-                  // Botón de ayuda
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: IconButton(
-                      icon: const Icon(Icons.help_outline),
-                      onPressed: _showHelp,
-                      tooltip: 'Ayuda',
-                    ),
-                  ),
-                  // Marco visual
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Center(
-                        child: Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white70, width: 2),
-                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            // Controles inferiores
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    iconSize: 32,
+                    icon: const Icon(Icons.image_outlined),
+                    onPressed: _isScanning ? null : _pickFromGalleryAndScan,
+                    tooltip: 'Subir desde galería',
                   ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    onPressed: _isScanning ? null : _takePictureAndScan,
+                    child: const Icon(Icons.photo_camera_outlined, size: 28),
+                  ),
+                  const SizedBox(width: 32),
                 ],
               ),
             ),
-          ),
-          // Controles inferiores
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  iconSize: 32,
-                  icon: const Icon(Icons.image_outlined),
-                  onPressed: _isScanning ? null : _pickFromGalleryAndScan,
-                  tooltip: 'Subir desde galería',
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  onPressed: _isScanning ? null : _takePictureAndScan,
-                  child: const Icon(Icons.photo_camera_outlined, size: 28),
-                ),
-                const SizedBox(width: 32),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-      // Barra inferior fija
+      // Barra inferior SIN fondo
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _navIndex,
         type: BottomNavigationBarType.fixed,
