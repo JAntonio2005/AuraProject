@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:aura_pet/src/widgets/app_background.dart';
 import 'package:aura_pet/src/core/routes/services/history_service.dart';
 import 'package:aura_pet/src/core/models/prediction_history_item.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
+import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
+import 'package:aura_pet/src/widgets/state_panels.dart';
 
 class HistoryPage extends StatefulWidget {
   static const routeName = '/history';
@@ -71,26 +74,6 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  void _onTapNav(int i) {
-    switch (i) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/collection');
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/capture');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/community');
-        break;
-      case 3:
-        // ya estamos aquí
-        break;
-      case 4:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
-    }
-  }
-
   String _formatDate(DateTime? dt) {
     if (dt == null) return '';
     final d = dt; // lo usamos tal cual viene del backend
@@ -110,37 +93,21 @@ class _HistoryPageState extends State<HistoryPage> {
     required VoidCallback onRetry,
     required String emptyMessage,
   }) {
-    final t = Theme.of(context);
-
     if (loading) {
-      return const Center(child: CircularProgressIndicator());
+      return StatePanels.loading();
     } else if (error != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              error,
-              textAlign: TextAlign.center,
-              style: t.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Reintentar')),
-          ],
-        ),
+      return StatePanels.error(
+        context: context,
+        message: error,
+        onRetry: onRetry,
       );
     } else if (items.isEmpty) {
-      return Center(
-        child: Text(
-          emptyMessage,
-          style: t.textTheme.titleMedium?.copyWith(
-            color: t.colorScheme.onSurface.withValues(alpha: .7),
-          ),
-        ),
-      );
+      return StatePanels.empty(context: context, message: emptyMessage);
     } else {
+      final width = MediaQuery.sizeOf(context).width;
+      final listPadding = width < 380 ? 8.0 : 12.0;
       return ListView.separated(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(listPadding),
         itemCount: items.length,
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, i) {
@@ -176,13 +143,19 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: const Text('Historial'),
-          bottom: const TabBar(
+          bottom: TabBar(
+            labelStyle: TextStyle(
+              fontSize: isCompact ? 12 : 14,
+              fontWeight: FontWeight.w700,
+            ),
             tabs: [
               Tab(text: 'Predicciones', icon: Icon(Icons.analytics_outlined)),
               Tab(text: 'Búsquedas', icon: Icon(Icons.search)),
@@ -190,7 +163,7 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ),
         body: AppBackground(
-          opacity: 0.10,
+          opacity: DesignTokens.surfaceOpacityLow,
           child: SafeArea(
             child: TabBarView(
               children: [
@@ -214,38 +187,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
           ),
         ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: 3,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: _onTapNav,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.pets_outlined),
-              selectedIcon: Icon(Icons.pets),
-              label: 'Razas',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.photo_camera_outlined),
-              selectedIcon: Icon(Icons.photo_camera),
-              label: 'Cámara',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups),
-              label: 'Comunidad',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.history_outlined),
-              selectedIcon: Icon(Icons.history),
-              label: 'Historial',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Perfil',
-            ),
-          ],
-        ),
+        bottomNavigationBar: const AppNavigationBar(currentIndex: 3),
       ),
     );
   }

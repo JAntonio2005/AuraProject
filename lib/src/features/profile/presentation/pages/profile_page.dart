@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
 import 'package:aura_pet/src/core/routes/services/api_client.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
 import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   static const routeName = '/profile';
@@ -19,32 +21,10 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _email;
   String? _error;
 
-  final int _navIndex = 4; // 👈 Perfil
-
   @override
   void initState() {
     super.initState();
     _loadProfile();
-  }
-
-  void _onTapNav(int i) {
-    switch (i) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/collection');
-        break;
-      case 1:
-        Navigator.pushReplacementNamed(context, '/capture');
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/community');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/history');
-        break;
-      case 4:
-        // ya estamos en Perfil
-        break;
-    }
   }
 
   Future<void> _loadProfile() async {
@@ -126,6 +106,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final maxWidth = isWide ? 700.0 : 560.0;
+    final avatarRadius = isCompact ? 38.0 : 46.0;
 
     Widget body;
     if (_loading) {
@@ -152,111 +137,137 @@ class _ProfilePageState extends State<ProfilePage> {
       final name = _name?.isNotEmpty == true ? _name! : 'Usuario Aura';
       final email = _email?.isNotEmpty == true ? _email! : 'usuario@aura.app';
 
-      body = SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: 46,
-              child: Text(
-                _buildInitials(),
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w700,
+      body = Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
+              DesignTokens.space24,
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
+              DesignTokens.space24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Avatar
+                CircleAvatar(
+                  radius: avatarRadius,
+                  child: Text(
+                    _buildInitials(),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            Text(
-              name,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              email,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Nombre (solo lectura)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Nombre',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                const SizedBox(height: DesignTokens.space16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Accion principal',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Text(name),
-            ),
-            const SizedBox(height: 16),
+                const SizedBox(height: DesignTokens.space4),
 
-            // Correo (solo lectura)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Correo',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                Text(
+                  name,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                const SizedBox(height: DesignTokens.space4),
+                Text(
+                  email,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
-              ),
-              child: Text(email),
-            ),
+                const SizedBox(height: DesignTokens.space32),
 
-            const SizedBox(height: 32),
-
-            // 🔹 Sección "Acerca de"
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Acerca de',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                // Nombre (solo lectura)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Nombre',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _showAbout,
-                icon: const Icon(Icons.info_outline),
-                label: const Text('Acerca de Aura Pet'),
-              ),
-            ),
+                const SizedBox(height: DesignTokens.space4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(name),
+                ),
+                const SizedBox(height: DesignTokens.space16),
 
-            const SizedBox(height: 16),
-            // Aquí luego podrías meter un botón de Cerrar sesión, por ejemplo
-          ],
+                // Correo (solo lectura)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Correo',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Text(email),
+                ),
+
+                const SizedBox(height: DesignTokens.space32),
+
+                // 🔹 Sección "Acerca de"
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Acerca de',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _showAbout,
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('Acerca de Aura Pet'),
+                  ),
+                ),
+
+                const SizedBox(height: DesignTokens.space16),
+                // Aquí luego podrías meter un botón de Cerrar sesión, por ejemplo
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -266,39 +277,8 @@ class _ProfilePageState extends State<ProfilePage> {
         automaticallyImplyLeading: false, // 👈 SIN flecha de back
         title: const Text('Mi perfil'),
       ),
-      body: AppBackground(opacity: 0.04, child: body),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _navIndex,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        onDestinationSelected: _onTapNav,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.pets_outlined),
-            selectedIcon: Icon(Icons.pets),
-            label: 'Razas',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.photo_camera_outlined),
-            selectedIcon: Icon(Icons.photo_camera),
-            label: 'Cámara',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups),
-            label: 'Comunidad',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'Historial',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+      body: AppBackground(opacity: DesignTokens.surfaceOpacityLow, child: body),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 4),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aura_pet/src/core/routes/services/auth_service.dart';
+import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
 
 class NewPasswordPage extends StatefulWidget {
   static const routeName = '/new-password';
@@ -15,7 +17,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   final _passCtrl = TextEditingController();
   final _confCtrl = TextEditingController();
 
-  bool _hasExternalCode = false; // si viene por arguments, ocultamos el campo
+  bool _hasExternalCode = false;
   bool _obscure1 = true;
   bool _obscure2 = true;
   bool _loading = false;
@@ -43,7 +45,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   String? _validateCode(String? v) {
     final value = (v ?? '').trim();
     if (value.isEmpty) return 'Ingresa el código de verificación';
-    if (value.length < 4) return 'El código es muy corto';
     return null;
   }
 
@@ -55,16 +56,13 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   }
 
   String? _validateConfirm(String? v) {
-    if ((v ?? '').trim() != _passCtrl.text.trim()) {
-      return 'Las contraseñas no coinciden';
-    }
+    final value = (v ?? '').trim();
+    if (value != _passCtrl.text.trim()) return 'Las contraseñas no coinciden';
     return null;
   }
 
   Future<void> _onSubmit() async {
-    // valida todo; si el código viene externo, no validamos el campo oculto
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final code = _codeCtrl.text.trim();
     final newPassword = _passCtrl.text.trim();
@@ -78,17 +76,15 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Contraseña actualizada. Inicia sesión.')),
+        const SnackBar(content: Text('Contraseña actualizada correctamente')),
       );
-
-      // Regresa al Login
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst('Exception: ', '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo actualizar la contraseña: $msg')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('No se pudo actualizar: $msg')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -97,121 +93,140 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final maxWidth = isWide ? 560.0 : 460.0;
+    final horizontalPad = isCompact ? 16.0 : 24.0;
+    final ctaHeight = isCompact ? 46.0 : 52.0;
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Cambia tu contraseña',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+      body: AppBackground(
+        opacity: DesignTokens.surfaceOpacityLow,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPad,
+                  16,
+                  horizontalPad,
+                  16,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Cambia tu contraseña',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ingresa tu nueva contraseña',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: .75),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ingresa tu nueva contraseña',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: .75,
+                        ),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        if (!_hasExternalCode) ...[
-                          TextFormField(
-                            controller: _codeCtrl,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Código de verificación',
-                              hintText: 'XXXXXXX',
-                              prefixIcon: Icon(Icons.verified_outlined),
-                            ),
-                            validator: _validateCode,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: _obscure1,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: 'Nueva contraseña',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              onPressed: () =>
-                                  setState(() => _obscure1 = !_obscure1),
-                              icon: Icon(
-                                _obscure1
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(DesignTokens.space16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radius16,
+                        ),
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            if (!_hasExternalCode) ...[
+                              TextFormField(
+                                controller: _codeCtrl,
+                                textInputAction: TextInputAction.next,
+                                decoration: const InputDecoration(
+                                  labelText: 'Código de verificación',
+                                  hintText: 'XXXXXXX',
+                                  prefixIcon: Icon(Icons.verified_outlined),
+                                ),
+                                validator: _validateCode,
                               ),
-                              tooltip: _obscure1 ? 'Mostrar' : 'Ocultar',
-                            ),
-                          ),
-                          validator: _validatePass,
-                        ),
-                        const SizedBox(height: 12),
-
-                        TextFormField(
-                          controller: _confCtrl,
-                          obscureText: _obscure2,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _onSubmit(),
-                          decoration: InputDecoration(
-                            labelText: 'Confirmar contraseña',
-                            prefixIcon: const Icon(Icons.lock_reset),
-                            suffixIcon: IconButton(
-                              onPressed: () =>
-                                  setState(() => _obscure2 = !_obscure2),
-                              icon: Icon(
-                                _obscure2
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                              const SizedBox(height: 12),
+                            ],
+                            TextFormField(
+                              controller: _passCtrl,
+                              obscureText: _obscure1,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Nueva contraseña',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  onPressed: () =>
+                                      setState(() => _obscure1 = !_obscure1),
+                                  icon: Icon(
+                                    _obscure1
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                ),
                               ),
-                              tooltip: _obscure2 ? 'Mostrar' : 'Ocultar',
+                              validator: _validatePass,
                             ),
-                          ),
-                          validator: _validateConfirm,
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _confCtrl,
+                              obscureText: _obscure2,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _onSubmit(),
+                              decoration: InputDecoration(
+                                labelText: 'Confirmar contraseña',
+                                prefixIcon: const Icon(Icons.lock_reset),
+                                suffixIcon: IconButton(
+                                  onPressed: () =>
+                                      setState(() => _obscure2 = !_obscure2),
+                                  icon: Icon(
+                                    _obscure2
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                ),
+                              ),
+                              validator: _validateConfirm,
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: ctaHeight,
+                              child: FilledButton(
+                                onPressed: _loading ? null : _onSubmit,
+                                child: _loading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text('Guardar'),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Volver'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: FilledButton(
-                            onPressed: _loading ? null : _onSubmit,
-                            child: _loading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Guardar'),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Volver'),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

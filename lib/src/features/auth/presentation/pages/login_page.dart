@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:aura_pet/src/widgets/slow_bg.dart'; // <-- fondo con paneo/crossfade
 import 'package:aura_pet/src/core/routes/services/auth_service.dart';
+import 'package:aura_pet/src/core/routes/app_destinations.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';
@@ -62,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
 
       // Aquí ya tienes el token guardado en secure storage.
       // Navega a tu pantalla principal (ajusta la ruta si usas otra):
-      Navigator.pushReplacementNamed(context, '/collection');
+      Navigator.pushReplacementNamed(context, AppDestinations.collection);
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst('Exception: ', '');
@@ -83,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Ingresaste como invitado')));
-      Navigator.pushReplacementNamed(context, '/collection');
+      Navigator.pushReplacementNamed(context, AppDestinations.collection);
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst('Exception: ', '');
@@ -98,6 +100,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
+    final cardMaxWidth = isWide ? 560.0 : 460.0;
+    final primaryCtaHeight = isCompact ? 46.0 : 52.0;
 
     return Scaffold(
       extendBodyBehindAppBar: true, // para que el fondo cubra toda la pantalla
@@ -121,11 +129,13 @@ class _LoginPageState extends State<LoginPage> {
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
+                constraints: BoxConstraints(maxWidth: cardMaxWidth),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    16,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -149,105 +159,131 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _emailCtrl,
-                              keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.next,
-                              autofillHints: const [
-                                AutofillHints.username,
-                                AutofillHints.email,
-                              ],
-                              decoration: const InputDecoration(
-                                labelText: 'Correo',
-                                hintText: 'holamundo@gmail.com',
-                                prefixIcon: Icon(Icons.alternate_email),
-                              ),
-                              validator: _validateEmail,
+                      Container(
+                        padding: const EdgeInsets.all(DesignTokens.space16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.82,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            DesignTokens.radius16,
+                          ),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.22,
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _passCtrl,
-                              obscureText: _obscure,
-                              textInputAction: TextInputAction.done,
-                              onFieldSubmitted: (_) => _onSubmit(),
-                              autofillHints: const [AutofillHints.password],
-                              decoration: InputDecoration(
-                                labelText: 'Contraseña',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
+                          ),
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [
+                                  AutofillHints.username,
+                                  AutofillHints.email,
+                                ],
+                                decoration: const InputDecoration(
+                                  labelText: 'Correo',
+                                  hintText: 'holamundo@gmail.com',
+                                  prefixIcon: Icon(Icons.alternate_email),
+                                ),
+                                validator: _validateEmail,
+                              ),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _passCtrl,
+                                obscureText: _obscure,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _onSubmit(),
+                                autofillHints: const [AutofillHints.password],
+                                decoration: InputDecoration(
+                                  labelText: 'Contraseña',
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    onPressed: () =>
+                                        setState(() => _obscure = !_obscure),
+                                    icon: Icon(
+                                      _obscure
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    tooltip: _obscure ? 'Mostrar' : 'Ocultar',
                                   ),
-                                  tooltip: _obscure ? 'Mostrar' : 'Ocultar',
                                 ),
+                                validator: _validatePassword,
                               ),
-                              validator: _validatePassword,
-                            ),
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    ForgotPasswordPage.routeName,
-                                  );
-                                },
-                                child: const Text('Recuperar contraseña'),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: FilledButton(
-                                onPressed: _loading ? null : _onSubmit,
-                                child: _loading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Text('Continuar'),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 44,
-                              child: OutlinedButton.icon(
-                                onPressed: _loading ? null : _onGuestContinue,
-                                icon: const Icon(Icons.person_outline),
-                                label: const Text('Entrar como invitado'),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '¿No tienes cuenta? ',
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                                TextButton(
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/register');
+                                    Navigator.pushNamed(
+                                      context,
+                                      ForgotPasswordPage.routeName,
+                                    );
                                   },
-                                  child: const Text('¡Crea la tuya!'),
+                                  child: const Text('Recuperar contraseña'),
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Accion principal',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              SizedBox(
+                                width: double.infinity,
+                                height: primaryCtaHeight,
+                                child: FilledButton(
+                                  onPressed: _loading ? null : _onSubmit,
+                                  child: _loading
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text('Continuar'),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: OutlinedButton.icon(
+                                  onPressed: _loading ? null : _onGuestContinue,
+                                  icon: const Icon(Icons.person_outline),
+                                  label: const Text('Entrar como invitado'),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '¿No tienes cuenta? ',
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, '/register');
+                                    },
+                                    child: const Text('¡Crea la tuya!'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
