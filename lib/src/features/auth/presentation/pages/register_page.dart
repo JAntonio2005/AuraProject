@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aura_pet/src/core/routes/services/auth_service.dart'; // 👈 IMPORTANTE
+import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
 
 class RegisterPage extends StatefulWidget {
   static const routeName = '/register';
@@ -20,7 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscure2 = true;
   bool _loading = false;
 
-  final _authService = AuthService(); // 👈 USAREMOS EL MISMO SERVICE DEL LOGIN
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -63,12 +65,11 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final email = _emailCtrl.text.trim();
-    final fullName = _userCtrl.text.trim(); // 👈 lo mandamos como full_name
+    final fullName = _userCtrl.text.trim();
     final password = _passCtrl.text.trim();
 
     setState(() => _loading = true);
     try {
-      // 🔥 AQUÍ YA LLAMAMOS A FASTAPI
       await _authService.register(
         email: email,
         password: password,
@@ -76,15 +77,12 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Cuenta creada correctamente, ahora inicia sesión 😄'),
         ),
       );
-
-      // Volvemos al login
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().replaceFirst('Exception: ', '');
@@ -99,30 +97,54 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Registrar',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
+    final cs = theme.colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
+    final cardMaxWidth = isWide ? 560.0 : 460.0;
+    final primaryCtaHeight = isCompact ? 46.0 : 52.0;
 
-                  Form(
+    return Scaffold(
+      body: AppBackground(
+        opacity: DesignTokens.surfaceOpacityLow,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: cardMaxWidth),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  16,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(DesignTokens.space16),
+                  decoration: BoxDecoration(
+                    color: cs.surface.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                  ),
+                  child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Correo
+                        Text(
+                          'Crear cuenta',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Completa tus datos para crear tu cuenta.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
@@ -130,18 +152,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           autofillHints: const [AutofillHints.email],
                           decoration: const InputDecoration(
                             labelText: 'Correo',
-                            hintText: 'holomundo@gmail.com',
+                            hintText: 'holamundo@gmail.com',
                             prefixIcon: Icon(Icons.alternate_email),
                           ),
                           validator: _validateEmail,
                         ),
                         const SizedBox(height: 12),
-
-                        // Nombre de usuario (full_name para el backend)
                         TextFormField(
                           controller: _userCtrl,
                           textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
                             labelText: 'Nombre de usuario',
                             hintText: 'pepito piernas largas',
@@ -150,8 +169,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           validator: _validateUser,
                         ),
                         const SizedBox(height: 12),
-
-                        // Contraseña
                         TextFormField(
                           controller: _passCtrl,
                           obscureText: _obscure1,
@@ -168,14 +185,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              tooltip: _obscure1 ? 'Mostrar' : 'Ocultar',
                             ),
                           ),
                           validator: _validatePass,
                         ),
                         const SizedBox(height: 12),
-
-                        // Confirmar contraseña
                         TextFormField(
                           controller: _confCtrl,
                           obscureText: _obscure2,
@@ -193,17 +207,24 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              tooltip: _obscure2 ? 'Mostrar' : 'Ocultar',
                             ),
                           ),
                           validator: _validateConfirm,
                         ),
                         const SizedBox(height: 16),
-
-                        // Botón Continuar
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Accion principal',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
+                          height: primaryCtaHeight,
                           child: FilledButton(
                             onPressed: _loading ? null : _onSubmit,
                             child: _loading
@@ -218,8 +239,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // ¿Ya tienes cuenta? ¡Inicia Sesión!
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -241,7 +260,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),

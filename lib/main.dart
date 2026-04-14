@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'src/core/theme/app_theme.dart';
 import 'src/core/routes/app_router.dart';
+import 'src/core/routes/app_destinations.dart';
 import 'src/features/home/presentation/pages/home_page.dart';
 
 import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
@@ -19,6 +20,7 @@ import 'package:aura_pet/src/features/result/presentation/pages/prediction_detai
 
 import 'package:aura_pet/src/features/history/presentation/pages/history_page.dart';
 import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
+import 'package:aura_pet/src/features/community/presentation/pages/community_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +42,7 @@ class AuraApp extends StatelessWidget {
       onGenerateRoute: AppRouter.onGenerateRoute,
 
       routes: {
-        '/home': (context) => const HomePage(),
+        AppDestinations.home: (context) => const HomePage(),
 
         // Auth
         LoginPage.routeName: (context) => const LoginPage(),
@@ -49,23 +51,26 @@ class AuraApp extends StatelessWidget {
         NewPasswordPage.routeName: (context) => const NewPasswordPage(),
         PredictionDetailPage.routeName: (_) => const PredictionDetailPage(),
         // Colección
-        '/collection': (context) => const CollectionPage(),
+        AppDestinations.collection: (context) => const CollectionPage(),
         '/coleccion': (context) => const CollectionPage(),
 
         // Cámara / Captura
-        '/capture': (context) => const CapturePage(),
+        AppDestinations.capture: (context) => const CapturePage(),
         '/tomar-foto': (context) => const CapturePage(),
 
         // Resultado IA
         '/result': (context) => const BreedDetailPage(),
 
         // Perfil
-        '/profile': (context) => const ProfilePage(),
+        AppDestinations.profile: (context) => const ProfilePage(),
         '/perfil': (context) => const ProfilePage(),
 
         // Historial
-        '/history': (context) => const HistoryPage(),
+        AppDestinations.history: (context) => const HistoryPage(),
         '/historial': (context) => const HistoryPage(),
+
+        // Comunidad
+        AppDestinations.community: (context) => const CommunityPage(),
       },
     );
   }

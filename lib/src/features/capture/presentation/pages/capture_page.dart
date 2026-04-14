@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:aura_pet/src/widgets/app_background.dart';
 import 'package:aura_pet/src/core/routes/services/predict_service.dart'; // 👈 NUEVO
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
+import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
 
 class CapturePage extends StatefulWidget {
   const CapturePage({super.key});
@@ -16,9 +18,6 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
-  // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
-  final int _navIndex = 1;
-
   CameraController? _controller;
   Future<void>? _initCameraFuture;
   final ImagePicker _picker = ImagePicker();
@@ -111,7 +110,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         final sizeInMB = (sizeInBytes / (1024 * 1024)).toStringAsFixed(2);
 
         _showSnack(
-          'La imagen es muy pesada (${sizeInMB} MB). El máximo es $_maxImageSizeInMB MB.',
+          'La imagen es muy pesada ($sizeInMB MB). El máximo es $_maxImageSizeInMB MB.',
         );
         return;
       }
@@ -191,42 +190,34 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  void _onTapNav(int i) {
-    switch (i) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/collection');
-        break;
-      case 1:
-        break; // ya estamos aquí
-      case 2:
-        Navigator.pushReplacementNamed(context, '/history');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cam = _controller;
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final frameSize = isCompact ? 180.0 : (isWide ? 280.0 : 220.0);
+    final shutterPadding = isCompact ? 12.0 : 16.0;
+    final helperTextSize = isCompact ? 12.0 : 13.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tomar foto')),
       // Fondo SOLO en body
       body: AppBackground(
-        opacity: 0.12,
+        opacity: DesignTokens.surfaceOpacityMedium,
         child: Column(
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(DesignTokens.space12),
                 child: Stack(
                   children: [
                     // Preview de cámara o placeholder
                     Positioned.fill(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radius12,
+                        ),
                         child: cam == null
                             ? _placeholder()
                             : FutureBuilder<void>(
@@ -263,14 +254,16 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                       child: IgnorePointer(
                         child: Center(
                           child: Container(
-                            width: 220,
-                            height: 220,
+                            width: frameSize,
+                            height: frameSize,
                             decoration: BoxDecoration(
                               border: Border.all(
                                 color: Colors.white70,
                                 width: 2,
                               ),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(
+                                DesignTokens.radius12,
+                              ),
                             ),
                           ),
                         ),
@@ -280,9 +273,23 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DesignTokens.space16,
+              ),
+              child: Text(
+                'Accion principal: tomar foto para escanear',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: helperTextSize,
+                ),
+              ),
+            ),
+            const SizedBox(height: DesignTokens.space8),
             // Controles inferiores
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: DesignTokens.space12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -295,10 +302,13 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(shutterPadding),
                     ),
                     onPressed: _isScanning ? null : _takePictureAndScan,
-                    child: const Icon(Icons.photo_camera_outlined, size: 28),
+                    child: Icon(
+                      Icons.photo_camera_outlined,
+                      size: isCompact ? 24 : 30,
+                    ),
                   ),
                   const SizedBox(width: 32),
                 ],
@@ -307,30 +317,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
           ],
         ),
       ),
-      // Barra inferior SIN fondo
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onTapNav,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Razas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.photo_camera_outlined),
-            label: 'Cámara',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Historial',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
-        ],
-      ),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 1),
     );
   }
 
