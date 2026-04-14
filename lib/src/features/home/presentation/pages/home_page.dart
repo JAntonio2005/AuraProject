@@ -81,19 +81,20 @@ class HomePage extends StatelessWidget {
                               child: const Text('Registrarse'),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          // 🔹 Nuevo botón temporal de invitado
+                          const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
-                            child: TextButton(
+                            child: TextButton.icon(
                               onPressed: () {
-                                // Salta directo al resto de la app
-                                Navigator.pushReplacementNamed(
+                                // Acceso temporal sin autenticación.
+                                Navigator.pushNamedAndRemoveUntil(
                                   context,
                                   '/collection',
+                                  (route) => false,
                                 );
                               },
-                              child: const Text('Entrar como invitado'),
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text('Continuar como invitado'),
                             ),
                           ),
                         ],
