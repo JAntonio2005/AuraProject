@@ -40,7 +40,7 @@ class BreedsService {
       }
 
       throw Exception('Formato de respuesta no esperado en /breeds/');
-    } on DioException catch (e) {
+    } on DioException {
       // ...
       rethrow;
     }

@@ -18,7 +18,6 @@ class AuthService extends ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   UserModel? _user;
-  String? _accessToken;
 
   UserModel? get user => _user;
   bool get isLoggedIn => _user != null && !_user!.isGuest;
@@ -33,7 +32,6 @@ class AuthService extends ChangeNotifier {
       name: name,
       isGuest: true,
     );
-    _accessToken = null;
     if (kDebugMode) {
       print('[AuthService] Sesión invitado creada');
     }
@@ -125,8 +123,6 @@ class AuthService extends ChangeNotifier {
         throw Exception('Respuesta inválida del servidor');
       }
 
-      _accessToken = token;
-
       // Guardar token para que el interceptor lo use en /predict, etc.
       await _storage.write(key: 'access_token', value: token);
 
@@ -168,8 +164,6 @@ class AuthService extends ChangeNotifier {
       return;
     }
 
-    _accessToken = token;
-
     // Si no tienes endpoint /users/me, al menos marca como logueado
     _user ??= UserModel(id: 'remote_user', name: 'Usuario', isGuest: false);
 
@@ -184,7 +178,6 @@ class AuthService extends ChangeNotifier {
   // ===========================
   Future<void> signOut() async {
     _user = null;
-    _accessToken = null;
     await _storage.delete(key: 'access_token');
     if (kDebugMode) {
       print('[AuthService] Sesión cerrada');
