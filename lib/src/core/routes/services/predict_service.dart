@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'; // 👈 para debugPrint y kDebugMode
 
-import '../models/predict_response.dart';
+import '../../models/predict_response.dart';
 import 'api_client.dart';
 
 class PredictService {

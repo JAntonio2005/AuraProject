@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:aura_pet/src/core/services/auth_service.dart'; // 👈 IMPORTANTE
+import 'package:aura_pet/src/core/routes/services/auth_service.dart'; // 👈 IMPORTANTE
 
 class RegisterPage extends StatefulWidget {
   static const routeName = '/register';

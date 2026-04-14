@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 /// - Si pasa 2+ imágenes: además hace crossfade cada [swapInterval].
 class SlowBackground extends StatefulWidget {
   final List<ImageProvider> images;
-  final Duration panDuration;     // tiempo de ida o vuelta del paneo
-  final Duration swapInterval;    // cada cuánto cambia de imagen (si hay varias)
-  final double dimOpacity;        // capa blanca para no opacar el contenido (0..1)
+  final Duration panDuration; // tiempo de ida o vuelta del paneo
+  final Duration swapInterval; // cada cuánto cambia de imagen (si hay varias)
+  final double dimOpacity; // capa blanca para no opacar el contenido (0..1)
 
   const SlowBackground({
     super.key,
@@ -38,17 +38,18 @@ class _SlowBackgroundState extends State<SlowBackground>
 
     // Paneo infinito: izquierda -> derecha -> izquierda -> ...
     _pan = AnimationController(vsync: this, duration: widget.panDuration);
-    _align = AlignmentTween(
-      begin: const Alignment(-0.8, 0.0), // ligeramente a la izquierda
-      end:   const Alignment( 0.8, 0.0), // ligeramente a la derecha
-    ).animate(CurvedAnimation(parent: _pan, curve: Curves.linear))
-      ..addStatusListener((s) {
-        if (s == AnimationStatus.completed) {
-          _pan.reverse(); // regresar
-        } else if (s == AnimationStatus.dismissed) {
-          _pan.forward(); // ir de nuevo
-        }
-      });
+    _align =
+        AlignmentTween(
+            begin: const Alignment(-0.8, 0.0), // ligeramente a la izquierda
+            end: const Alignment(0.8, 0.0), // ligeramente a la derecha
+          ).animate(CurvedAnimation(parent: _pan, curve: Curves.linear))
+          ..addStatusListener((s) {
+            if (s == AnimationStatus.completed) {
+              _pan.reverse(); // regresar
+            } else if (s == AnimationStatus.dismissed) {
+              _pan.forward(); // ir de nuevo
+            }
+          });
     _pan.forward();
 
     // Si hay más de una imagen, programe crossfade periódico
@@ -120,7 +121,9 @@ class _SlowBackgroundState extends State<SlowBackground>
         Positioned.fill(child: faded),
         // Atenuación para que el contenido sea legible
         Positioned.fill(
-          child: Container(color: Colors.white.withOpacity(widget.dimOpacity)),
+          child: Container(
+            color: Colors.white.withValues(alpha: widget.dimOpacity),
+          ),
         ),
         // Gradiente muy sutil para botones/textos
         Positioned.fill(
@@ -128,11 +131,12 @@ class _SlowBackgroundState extends State<SlowBackground>
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white.withOpacity(0.06),
-                    Colors.white.withOpacity(0.18),
-                    Colors.white.withOpacity(0.30),
+                    Colors.white.withValues(alpha: 0.06),
+                    Colors.white.withValues(alpha: 0.18),
+                    Colors.white.withValues(alpha: 0.30),
                   ],
                 ),
               ),

@@ -1,4 +1,12 @@
+
+  
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- 👇 AÑADE ESTO -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- opcional, pero útil -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:name="${applicationName}"
     android:label="aura_pet"

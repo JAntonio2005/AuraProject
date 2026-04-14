@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
-import 'package:aura_pet/src/core/services/api_client.dart';
+import 'package:aura_pet/src/core/routes/services/api_client.dart';
 import 'package:aura_pet/src/widgets/app_background.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -19,10 +19,29 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _email;
   String? _error;
 
+  final int _navIndex = 3; // 👈 Perfil
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
+  }
+
+  void _onTapNav(int i) {
+    switch (i) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/collection');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/capture');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 3:
+        // ya estamos en Perfil
+        break;
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -70,6 +89,35 @@ class _ProfilePageState extends State<ProfilePage> {
       return parts.first[0].toUpperCase();
     }
     return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  // 🔹 Diálogo "Acerca de"
+  void _showAbout() {
+    showAboutDialog(
+      context: context,
+      applicationName: 'Aura Pet',
+      applicationVersion: '1.0.2',
+      applicationIcon: Image.asset(
+        'assets/images/iconDog.png',
+        width: 48,
+        height: 48,
+      ),
+      children: const [
+        SizedBox(height: 8),
+        Text(
+          'Aura Pet es una aplicación creada como proyecto escolar para '
+          'identificar razas de perros usando inteligencia artificial y una '
+          'colección de 120 razas.\n\n'
+          'Desarrollada como parte de la experiencia educativa de Diseño de Software '
+          'en la Universidad Veracruzana, región Córdoba–Orizaba, en la Facultad de '
+          'Negocios y Tecnologías, programa educativo de Ingeniería de Software.\n\n'
+          'Desarrollada por los estudiantes José Antonio Ortiz Hernández y '
+          'José Ricardo Rojas Trujillo.\n\n'
+          'Bajo la asesoría del Dr. Adolfo Centeno Téllez.\n\n'
+          'Esta versión es únicamente para fines académicos y de demostración.',
+        ),
+      ],
+    );
   }
 
   @override
@@ -182,6 +230,28 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             const SizedBox(height: 32),
+
+            // 🔹 Sección "Acerca de"
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Acerca de',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _showAbout,
+                icon: const Icon(Icons.info_outline),
+                label: const Text('Acerca de Aura Pet'),
+              ),
+            ),
+
+            const SizedBox(height: 16),
             // Aquí luego podrías meter un botón de Cerrar sesión, por ejemplo
           ],
         ),
@@ -189,8 +259,34 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi perfil')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // 👈 SIN flecha de back
+        title: const Text('Mi perfil'),
+      ),
       body: AppBackground(opacity: 0.04, child: body),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _navIndex,
+        type: BottomNavigationBarType.fixed,
+        onTap: _onTapNav,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Razas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_camera_outlined),
+            label: 'Cámara',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Historial',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Perfil',
+          ),
+        ],
+      ),
     );
   }
 }

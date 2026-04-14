@@ -75,6 +75,34 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // ==============================================
+  //  R E Q U E S T   P A S S W O R D   R E S E T
+  // ==============================================
+  Future<void> requestPasswordReset({required String email}) async {
+    try {
+      await _dio.post('/auth/password/reset/request', data: {'email': email});
+    } on DioException catch (e) {
+      throw Exception(_mapError(e));
+    }
+  }
+
+  // ==============================================
+  //  C O N F I R M   P A S S W O R D   R E S E T
+  // ==============================================
+  Future<void> confirmPasswordReset({
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.post(
+        '/auth/password/reset/confirm',
+        data: {'code': code, 'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw Exception(_mapError(e));
+    }
+  }
+
   // ===========================
   //  L O G I N   /auth/login
   // ===========================
@@ -177,6 +205,7 @@ class AuthService extends ChangeNotifier {
 
     if (status == 400 || status == 401) return 'Credenciales inválidas';
     if (status == 409) return 'El usuario ya existe';
+    if (status == 410) return 'El código de verificación expiró';
     return 'Error de red ($status)';
   }
 }

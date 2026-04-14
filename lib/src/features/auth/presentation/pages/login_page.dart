@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:aura_pet/src/widgets/slow_bg.dart'; // <-- fondo con paneo/crossfade
-import 'package:aura_pet/src/core/services/auth_service.dart';
+import 'package:aura_pet/src/core/routes/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = '/login';

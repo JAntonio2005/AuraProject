@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/core/routes/services/auth_service.dart';
 
 class NewPasswordPage extends StatefulWidget {
   static const routeName = '/new-password';
@@ -18,6 +19,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
   bool _obscure1 = true;
   bool _obscure2 = true;
   bool _loading = false;
+  final _authService = AuthService();
 
   @override
   void didChangeDependencies() {
@@ -64,10 +66,15 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
+    final code = _codeCtrl.text.trim();
+    final newPassword = _passCtrl.text.trim();
+
     setState(() => _loading = true);
     try {
-      // TODO: Llamar a backend para actualizar contraseña usando código + nueva contraseña
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      await _authService.confirmPasswordReset(
+        code: code,
+        newPassword: newPassword,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,8 +85,9 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo actualizar la contraseña: $e')),
+        SnackBar(content: Text('No se pudo actualizar la contraseña: $msg')),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -142,8 +150,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                             labelText: 'Nueva contraseña',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              onPressed:
-                                  () => setState(() => _obscure1 = !_obscure1),
+                              onPressed: () =>
+                                  setState(() => _obscure1 = !_obscure1),
                               icon: Icon(
                                 _obscure1
                                     ? Icons.visibility
@@ -165,8 +173,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                             labelText: 'Confirmar contraseña',
                             prefixIcon: const Icon(Icons.lock_reset),
                             suffixIcon: IconButton(
-                              onPressed:
-                                  () => setState(() => _obscure2 = !_obscure2),
+                              onPressed: () =>
+                                  setState(() => _obscure2 = !_obscure2),
                               icon: Icon(
                                 _obscure2
                                     ? Icons.visibility
@@ -184,16 +192,15 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                           height: 48,
                           child: FilledButton(
                             onPressed: _loading ? null : _onSubmit,
-                            child:
-                                _loading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Text('Guardar'),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Guardar'),
                           ),
                         ),
                         const SizedBox(height: 12),
