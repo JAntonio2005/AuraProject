@@ -80,9 +80,12 @@ class _HistoryPageState extends State<HistoryPage> {
         Navigator.pushReplacementNamed(context, '/capture');
         break;
       case 2:
-        // ya estamos aquí
+        Navigator.pushReplacementNamed(context, '/community');
         break;
       case 3:
+        // ya estamos aquí
+        break;
+      case 4:
         Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
@@ -211,25 +214,34 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 2, // Historial
-          type: BottomNavigationBarType.fixed,
-          onTap: _onTapNav,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: 3,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          onDestinationSelected: _onTapNav,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.pets_outlined),
+              selectedIcon: Icon(Icons.pets),
               label: 'Razas',
             ),
-            BottomNavigationBarItem(
+            NavigationDestination(
               icon: Icon(Icons.photo_camera_outlined),
+              selectedIcon: Icon(Icons.photo_camera),
               label: 'Cámara',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history),
+            NavigationDestination(
+              icon: Icon(Icons.groups_outlined),
+              selectedIcon: Icon(Icons.groups),
+              label: 'Comunidad',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.history_outlined),
+              selectedIcon: Icon(Icons.history),
               label: 'Historial',
             ),
-            BottomNavigationBarItem(
+            NavigationDestination(
               icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
               label: 'Perfil',
             ),
           ],

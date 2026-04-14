@@ -19,6 +19,7 @@ import 'package:aura_pet/src/features/result/presentation/pages/prediction_detai
 
 import 'package:aura_pet/src/features/history/presentation/pages/history_page.dart';
 import 'package:aura_pet/src/features/profile/presentation/pages/profile_page.dart';
+import 'package:aura_pet/src/features/community/presentation/pages/community_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,9 @@ class AuraApp extends StatelessWidget {
         // Historial
         '/history': (context) => const HistoryPage(),
         '/historial': (context) => const HistoryPage(),
+
+        // Comunidad
+        CommunityPage.routeName: (context) => const CommunityPage(),
       },
     );
   }

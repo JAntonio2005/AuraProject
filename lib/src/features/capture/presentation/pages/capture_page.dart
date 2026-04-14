@@ -16,7 +16,7 @@ class CapturePage extends StatefulWidget {
 }
 
 class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
-  // 0=Razas, 1=Cámara (esta), 2=Historial, 3=Perfil
+  // 0=Razas, 1=Cámara (esta), 2=Comunidad, 3=Historial, 4=Perfil
   final int _navIndex = 1;
 
   CameraController? _controller;
@@ -111,7 +111,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         final sizeInMB = (sizeInBytes / (1024 * 1024)).toStringAsFixed(2);
 
         _showSnack(
-          'La imagen es muy pesada (${sizeInMB} MB). El máximo es $_maxImageSizeInMB MB.',
+          'La imagen es muy pesada ($sizeInMB MB). El máximo es $_maxImageSizeInMB MB.',
         );
         return;
       }
@@ -199,9 +199,12 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
       case 1:
         break; // ya estamos aquí
       case 2:
-        Navigator.pushReplacementNamed(context, '/history');
+        Navigator.pushReplacementNamed(context, '/community');
         break;
       case 3:
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 4:
         Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
@@ -308,25 +311,34 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         ),
       ),
       // Barra inferior SIN fondo
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onTapNav,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _navIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: _onTapNav,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.pets_outlined),
+            selectedIcon: Icon(Icons.pets),
             label: 'Razas',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.photo_camera_outlined),
+            selectedIcon: Icon(Icons.photo_camera),
             label: 'Cámara',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
+          NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups),
+            label: 'Comunidad',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history),
             label: 'Historial',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Perfil',
           ),
         ],

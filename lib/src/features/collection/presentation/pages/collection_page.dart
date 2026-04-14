@@ -112,6 +112,7 @@ class _CollectionPageState extends State<CollectionPage> {
     }
 
     // 2) Navegar al detalle de la raza usando BreedDetailArgs
+    if (!mounted) return;
     Navigator.pushNamed(
       context,
       BreedDetailPage.routeName, // '/result'
@@ -133,9 +134,12 @@ class _CollectionPageState extends State<CollectionPage> {
         Navigator.pushReplacementNamed(context, '/capture');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/history');
+        Navigator.pushReplacementNamed(context, '/community');
         break;
       case 3:
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 4:
         Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
@@ -241,25 +245,34 @@ class _CollectionPageState extends State<CollectionPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Colección de Razas')),
       body: AppBackground(opacity: 0.1, child: body),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _navIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onTapNav,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _navIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: _onTapNav,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.pets_outlined),
+            selectedIcon: Icon(Icons.pets),
             label: 'Razas',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.photo_camera_outlined),
+            selectedIcon: Icon(Icons.photo_camera),
             label: 'Cámara',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
+          NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups),
+            label: 'Comunidad',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history),
             label: 'Historial',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
             label: 'Perfil',
           ),
         ],
