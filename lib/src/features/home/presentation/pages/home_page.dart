@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/core/routes/services/auth_service.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/login_page.dart';
 import 'package:aura_pet/src/features/auth/presentation/pages/register_page.dart';
 
@@ -79,6 +80,26 @@ class HomePage extends StatelessWidget {
                                 );
                               },
                               child: const Text('Registrarse'),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                AuthService().signInAsGuest();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Ingresaste como invitado'),
+                                  ),
+                                );
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/collection',
+                                );
+                              },
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text('Entrar como invitado'),
                             ),
                           ),
                           const SizedBox(height: 16),
