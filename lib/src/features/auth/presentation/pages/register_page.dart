@@ -78,7 +78,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada correctamente')),
+        const SnackBar(
+          content: Text('Cuenta creada correctamente, ahora inicia sesión 😄'),
+        ),
       );
       Navigator.pop(context);
     } catch (e) {
