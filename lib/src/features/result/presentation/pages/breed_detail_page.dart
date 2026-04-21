@@ -4,8 +4,8 @@ class BreedDetailArgs {
   final String id;
   final String name;
   final String? description;
-  final String? imageUrl;     // URL futura del backend (opcional)
-  final double? confidence;   // % de confianza si viene de IA (opcional)
+  final String? imageUrl; // URL futura del backend (opcional)
+  final double? confidence; // % de confianza si viene de IA (0–1, opcional)
 
   const BreedDetailArgs({
     required this.id,
@@ -17,15 +17,49 @@ class BreedDetailArgs {
 }
 
 class BreedDetailPage extends StatelessWidget {
+  // Opcional, por si quieres usarlo en las rutas:
+  // routes: { BreedDetailPage.routeName: (_) => const BreedDetailPage() }
+  static const routeName = '/result';
+
   const BreedDetailPage({super.key});
+
+  /// Acepta tanto:
+  /// - BreedDetailArgs
+  /// - Map<String, dynamic> (como el que estabas mandando desde CollectionPage)
+  BreedDetailArgs _getArgs(BuildContext context) {
+    final raw = ModalRoute.of(context)?.settings.arguments;
+
+    // Caso 1: ya viene como BreedDetailArgs (lo ideal)
+    if (raw is BreedDetailArgs) return raw;
+
+    // Caso 2: viene como Map (lo que te estaba causando el error)
+    if (raw is Map) {
+      final map = Map<String, dynamic>.from(raw);
+
+      return BreedDetailArgs(
+        id: (map['id'] ?? '').toString(),
+        // Si no hay 'name', intentamos con 'label'
+        name: (map['name'] ?? map['label'] ?? 'Raza desconocida').toString(),
+        description: map['description'] as String?,
+        imageUrl: map['imageUrl'] as String?,
+        confidence: map['confidence'] is num
+            ? (map['confidence'] as num).toDouble()
+            : null,
+      );
+    }
+
+    // Caso 3: no vino nada o vino algo raro → fallback seguro
+    return const BreedDetailArgs(id: '', name: 'Raza desconocida');
+  }
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as BreedDetailArgs?;
-    final name = args?.name ?? 'Nombre de la raza de perro';
-    final desc = args?.description ?? 'Datos relevantes de la raza';
-    final imageUrl = args?.imageUrl;
-    final conf = args?.confidence;
+    final args = _getArgs(context);
+
+    final name = args.name;
+    final desc = args.description ?? 'Datos relevantes de la raza.';
+    final imageUrl = args.imageUrl;
+    final conf = args.confidence; // se asume 0–1
 
     return Scaffold(
       appBar: AppBar(
@@ -47,7 +81,7 @@ class BreedDetailPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   color: Colors.black12,
-                  child: imageUrl != null
+                  child: imageUrl != null && imageUrl.isNotEmpty
                       ? Image.network(imageUrl, fit: BoxFit.cover)
                       : Stack(
                           alignment: Alignment.center,
@@ -61,7 +95,7 @@ class BreedDetailPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Nombre + (opcional) chip de confianza
+            // Nombre + chip de confianza (si viene)
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -69,13 +103,17 @@ class BreedDetailPage extends StatelessWidget {
                   child: Text(
                     name,
                     style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w700, color: Colors.blue,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blue,
                     ),
                   ),
                 ),
                 if (conf != null)
                   Chip(
-                    label: Text('${(conf * 100).toStringAsFixed(1)}%'),
+                    label: Text(
+                      '${(conf * 100).toStringAsFixed(1)}%',
+                    ), // 0–1 → %
                     avatar: const Icon(Icons.verified, size: 18),
                   ),
               ],
@@ -84,19 +122,23 @@ class BreedDetailPage extends StatelessWidget {
 
             // Sección de datos
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Datos relevantes de la raza',
-                        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.blue)),
-                    const SizedBox(height: 8),
-                    Text(
-                      desc,
-                      style: const TextStyle(fontSize: 14),
+                    const Text(
+                      'Datos relevantes de la raza',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue,
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(desc, style: const TextStyle(fontSize: 14)),
                   ],
                 ),
               ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:aura_pet/src/core/routes/services/auth_service.dart'; // 👈 IMPORTANTE
+import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/theme/design_tokens.dart';
 
 class RegisterPage extends StatefulWidget {
   static const routeName = '/register';
@@ -18,6 +21,8 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscure1 = true;
   bool _obscure2 = true;
   bool _loading = false;
+
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -59,23 +64,29 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _onSubmit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final email = _emailCtrl.text.trim();
+    final fullName = _userCtrl.text.trim();
+    final password = _passCtrl.text.trim();
+
     setState(() => _loading = true);
     try {
-      // TODO: sustituir por tu lógica real de registro (API/Firebase/etc.)
-      await Future<void>.delayed(const Duration(milliseconds: 900));
-      if (!mounted) return;
+      await _authService.register(
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cuenta creada correctamente')),
       );
-
-      // Ejemplo de navegación después de registrar:
-      // Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('No se pudo registrar: $e')));
+      ).showSnackBar(SnackBar(content: Text('No se pudo registrar: $msg')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -84,30 +95,61 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Registrar',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
+    final cs = theme.colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < DesignTokens.compactWidth;
+    final isWide = width >= DesignTokens.wideWidth;
+    final horizontalPadding = isCompact
+        ? DesignTokens.space16
+        : DesignTokens.space24;
+    final verticalPadding = isCompact
+        ? DesignTokens.space12
+        : DesignTokens.space20;
+    final cardMaxWidth = isWide ? 560.0 : 460.0;
+    final primaryCtaHeight = isCompact
+        ? DesignTokens.buttonHeightCompact
+        : DesignTokens.buttonHeightLarge;
 
-                  Form(
+    return Scaffold(
+      body: AppBackground(
+        opacity: DesignTokens.surfaceOpacityLow,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: cardMaxWidth),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  verticalPadding,
+                  horizontalPadding,
+                  verticalPadding,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(DesignTokens.space16),
+                  decoration: BoxDecoration(
+                    color: cs.surface.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                  ),
+                  child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Correo
+                        Text(
+                          'Crear cuenta',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: DesignTokens.space20),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Completa tus datos para crear tu cuenta.',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
@@ -115,18 +157,15 @@ class _RegisterPageState extends State<RegisterPage> {
                           autofillHints: const [AutofillHints.email],
                           decoration: const InputDecoration(
                             labelText: 'Correo',
-                            hintText: 'holomundo@gmail.com',
+                            hintText: 'holamundo@gmail.com',
                             prefixIcon: Icon(Icons.alternate_email),
                           ),
                           validator: _validateEmail,
                         ),
                         const SizedBox(height: 12),
-
-                        // Nombre de usuario
                         TextFormField(
                           controller: _userCtrl,
                           textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
                             labelText: 'Nombre de usuario',
                             hintText: 'pepito piernas largas',
@@ -135,8 +174,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           validator: _validateUser,
                         ),
                         const SizedBox(height: 12),
-
-                        // Contraseña
                         TextFormField(
                           controller: _passCtrl,
                           obscureText: _obscure1,
@@ -146,21 +183,18 @@ class _RegisterPageState extends State<RegisterPage> {
                             labelText: 'Contraseña',
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
-                              onPressed:
-                                  () => setState(() => _obscure1 = !_obscure1),
+                              onPressed: () =>
+                                  setState(() => _obscure1 = !_obscure1),
                               icon: Icon(
                                 _obscure1
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              tooltip: _obscure1 ? 'Mostrar' : 'Ocultar',
                             ),
                           ),
                           validator: _validatePass,
                         ),
                         const SizedBox(height: 12),
-
-                        // Confirmar contraseña
                         TextFormField(
                           controller: _confCtrl,
                           obscureText: _obscure2,
@@ -171,41 +205,45 @@ class _RegisterPageState extends State<RegisterPage> {
                             labelText: 'Confirmar contraseña',
                             prefixIcon: const Icon(Icons.lock_reset),
                             suffixIcon: IconButton(
-                              onPressed:
-                                  () => setState(() => _obscure2 = !_obscure2),
+                              onPressed: () =>
+                                  setState(() => _obscure2 = !_obscure2),
                               icon: Icon(
                                 _obscure2
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              tooltip: _obscure2 ? 'Mostrar' : 'Ocultar',
                             ),
                           ),
                           validator: _validateConfirm,
                         ),
                         const SizedBox(height: 16),
-
-                        // Botón Continuar
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Accion principal',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
+                          height: primaryCtaHeight,
                           child: FilledButton(
                             onPressed: _loading ? null : _onSubmit,
-                            child:
-                                _loading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                    : const Text('Continuar'),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Continuar'),
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // ¿Ya tienes cuenta? ¡Inicia Sesión!
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -215,10 +253,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushNamed(
+                                Navigator.pushReplacementNamed(
                                   context,
                                   '/login',
-                                ); // sin importar LoginPage
+                                );
                               },
                               child: const Text('¡Inicia Sesión!'),
                             ),
@@ -227,7 +265,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),

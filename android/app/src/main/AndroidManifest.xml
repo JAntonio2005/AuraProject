@@ -1,8 +1,18 @@
+
+  
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- 👇 AÑADE ESTO -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- opcional, pero útil -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
-        android:label="aura_pet"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+    android:label="aura_pet"
+    android:icon="@mipmap/ic_launcher"
+    android:usesCleartextTraffic="true"
+    android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"
