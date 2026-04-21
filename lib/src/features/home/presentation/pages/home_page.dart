@@ -13,19 +13,12 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < DesignTokens.compactWidth;
-    final isWide = width >= DesignTokens.wideWidth;
-    final horizontalPadding = isCompact
-        ? DesignTokens.space16
-        : DesignTokens.space24;
-    final verticalPadding = isCompact
-        ? DesignTokens.space16
-        : DesignTokens.space24;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
     final heroImageSize = isCompact ? 140.0 : 180.0;
     final cardMaxWidth = isWide ? 560.0 : 420.0;
-    final primaryCtaHeight = isCompact
-        ? DesignTokens.buttonHeightCompact
-        : DesignTokens.buttonHeightLarge;
+    final primaryCtaHeight = isCompact ? 46.0 : 52.0;
 
     return Scaffold(
       body: AppBackground(
@@ -36,12 +29,7 @@ class HomePage extends StatelessWidget {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    verticalPadding,
-                    horizontalPadding,
-                    verticalPadding,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Container(
                     constraints: BoxConstraints(maxWidth: cardMaxWidth),
                     padding: const EdgeInsets.all(DesignTokens.space16),
@@ -60,7 +48,7 @@ class HomePage extends StatelessWidget {
                           height: heroImageSize,
                           fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: DesignTokens.space16),
+                        const SizedBox(height: 16),
                         Text(
                           'Bienvenido',
                           textAlign: TextAlign.center,
@@ -81,11 +69,9 @@ class HomePage extends StatelessWidget {
                                 fontWeight: FontWeight.w800,
                               ),
                         ),
-                        const SizedBox(height: DesignTokens.space24),
+                        const SizedBox(height: 24),
                         ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: isCompact ? 280 : 320,
-                          ),
+                          constraints: const BoxConstraints(maxWidth: 280),
                           child: Column(
                             children: [
                               Align(

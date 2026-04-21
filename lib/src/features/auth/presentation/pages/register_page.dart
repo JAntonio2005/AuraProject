@@ -97,18 +97,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < DesignTokens.compactWidth;
-    final isWide = width >= DesignTokens.wideWidth;
-    final horizontalPadding = isCompact
-        ? DesignTokens.space16
-        : DesignTokens.space24;
-    final verticalPadding = isCompact
-        ? DesignTokens.space12
-        : DesignTokens.space20;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
+    final horizontalPadding = isCompact ? 16.0 : 24.0;
     final cardMaxWidth = isWide ? 560.0 : 460.0;
-    final primaryCtaHeight = isCompact
-        ? DesignTokens.buttonHeightCompact
-        : DesignTokens.buttonHeightLarge;
+    final primaryCtaHeight = isCompact ? 46.0 : 52.0;
 
     return Scaffold(
       body: AppBackground(
@@ -120,9 +113,9 @@ class _RegisterPageState extends State<RegisterPage> {
               child: SingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  verticalPadding,
+                  16,
                   horizontalPadding,
-                  verticalPadding,
+                  16,
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(DesignTokens.space16),
@@ -141,7 +134,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: DesignTokens.space20),
+                        const SizedBox(height: 20),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(

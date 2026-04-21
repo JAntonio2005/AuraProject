@@ -5,7 +5,6 @@ import 'package:aura_pet/src/features/community/data/community_blocks_seed.dart'
 import 'package:aura_pet/src/features/community/domain/community_content_block.dart';
 import 'package:aura_pet/src/widgets/app_background.dart';
 import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
-import 'package:aura_pet/src/widgets/layout/app_screen_scaffold.dart';
 
 class CommunityPage extends StatelessWidget {
   static const routeName = '/community';
@@ -36,11 +35,8 @@ class CommunityPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < DesignTokens.compactWidth;
-    final maxWidth = width >= DesignTokens.wideWidth ? 900.0 : 640.0;
-    final horizontalPadding = isCompact
-        ? DesignTokens.space12
-        : DesignTokens.space16;
+    final isCompact = width < 380;
+    final maxWidth = width >= 900 ? 900.0 : 640.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,84 +45,88 @@ class CommunityPage extends StatelessWidget {
       ),
       body: AppBackground(
         opacity: DesignTokens.surfaceOpacityLow,
-        child: AppScreenScaffold(
-          maxWidth: maxWidth,
-          body: ListView(
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              DesignTokens.space16,
-              horizontalPadding,
-              DesignTokens.space20,
-            ),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(DesignTokens.space16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(DesignTokens.radius18),
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary.withValues(
-                        alpha: DesignTokens.surfaceOpacityHigh,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                isCompact ? DesignTokens.space12 : DesignTokens.space16,
+                DesignTokens.space16,
+                isCompact ? DesignTokens.space12 : DesignTokens.space16,
+                DesignTokens.space20,
+              ),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(DesignTokens.space16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(DesignTokens.radius18),
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(
+                          alpha: DesignTokens.surfaceOpacityHigh,
+                        ),
+                        theme.colorScheme.secondary.withValues(
+                          alpha: DesignTokens.surfaceOpacityMedium,
+                        ),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Comparte y aprende con otros amantes de los perros',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      theme.colorScheme.secondary.withValues(
-                        alpha: DesignTokens.surfaceOpacityMedium,
+                      const SizedBox(height: DesignTokens.space8),
+                      Text(
+                        'Explora recomendaciones, tips de cuidado y próximos eventos.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: DesignTokens.space12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: isCompact ? 44 : 48,
+                        child: FilledButton.icon(
+                          onPressed: () =>
+                              _onTapBlock(context, communityBlocksSeed.first),
+                          icon: const Icon(Icons.explore_outlined),
+                          label: const Text('Explorar bloque destacado'),
+                        ),
                       ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Comparte y aprende con otros amantes de los perros',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                const SizedBox(height: DesignTokens.space16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Accion principal: abrir un bloque de comunidad',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: DesignTokens.space8),
-                    Text(
-                      'Explora recomendaciones, tips de cuidado y próximos eventos.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: DesignTokens.space12),
-                    SizedBox(
-                      width: double.infinity,
-                      height: isCompact ? 44 : 48,
-                      child: FilledButton.icon(
-                        onPressed: () =>
-                            _onTapBlock(context, communityBlocksSeed.first),
-                        icon: const Icon(Icons.explore_outlined),
-                        label: const Text('Explorar bloque destacado'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: DesignTokens.space16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Accion principal: abrir un bloque de comunidad',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-              const SizedBox(height: DesignTokens.space8),
-              ...communityBlocksSeed.map(
-                (block) => Padding(
-                  padding: const EdgeInsets.only(bottom: DesignTokens.space12),
-                  child: _CommunityCard(
-                    icon: block.icon,
-                    title: block.title,
-                    subtitle: block.subtitle,
-                    onTap: () => _onTapBlock(context, block),
+                const SizedBox(height: DesignTokens.space8),
+                ...communityBlocksSeed.map(
+                  (block) => Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: DesignTokens.space12,
+                    ),
+                    child: _CommunityCard(
+                      icon: block.icon,
+                      title: block.title,
+                      subtitle: block.subtitle,
+                      onTap: () => _onTapBlock(context, block),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -5,7 +5,6 @@ import 'package:aura_pet/src/core/routes/services/api_client.dart';
 import 'package:aura_pet/src/core/theme/design_tokens.dart';
 import 'package:aura_pet/src/widgets/app_background.dart';
 import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
-import 'package:aura_pet/src/widgets/state_panels.dart';
 
 class ProfilePage extends StatefulWidget {
   static const routeName = '/profile';
@@ -108,22 +107,31 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < DesignTokens.compactWidth;
-    final isWide = width >= DesignTokens.wideWidth;
+    final isCompact = width < 380;
+    final isWide = width >= 900;
     final maxWidth = isWide ? 700.0 : 560.0;
-    final horizontalPadding = isCompact
-        ? DesignTokens.space12
-        : DesignTokens.space16;
     final avatarRadius = isCompact ? 38.0 : 46.0;
 
     Widget body;
     if (_loading) {
-      body = StatePanels.loading();
+      body = const Center(child: CircularProgressIndicator());
     } else if (_error != null) {
-      body = StatePanels.error(
-        context: context,
-        message: _error!,
-        onRetry: _loadProfile,
+      body = Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _loadProfile,
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
       );
     } else {
       final name = _name?.isNotEmpty == true ? _name! : 'Usuario Aura';
@@ -134,9 +142,9 @@ class _ProfilePageState extends State<ProfilePage> {
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
               DesignTokens.space24,
-              horizontalPadding,
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
               DesignTokens.space24,
             ),
             child: Column(
@@ -181,88 +189,56 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: DesignTokens.space32),
 
                 // Nombre (solo lectura)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Nombre',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space4),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(DesignTokens.space12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nombre',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DesignTokens.space4),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            DesignTokens.radius12,
-                          ),
-                          border: Border.all(
-                            color: theme.colorScheme.outline.withValues(
-                              alpha: 0.4,
-                            ),
-                          ),
-                        ),
-                        child: Text(name),
-                      ),
-                    ],
-                  ),
+                  child: Text(name),
                 ),
                 const SizedBox(height: DesignTokens.space16),
 
                 // Correo (solo lectura)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Correo',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space4),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(DesignTokens.space12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Correo',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: DesignTokens.space4),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            DesignTokens.radius12,
-                          ),
-                          border: Border.all(
-                            color: theme.colorScheme.outline.withValues(
-                              alpha: 0.4,
-                            ),
-                          ),
-                        ),
-                        child: Text(email),
-                      ),
-                    ],
-                  ),
+                  child: Text(email),
                 ),
 
                 const SizedBox(height: DesignTokens.space32),

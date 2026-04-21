@@ -5,31 +5,16 @@ import 'package:aura_pet/src/core/theme/design_tokens.dart';
 class StatePanels {
   const StatePanels._();
 
-  static Widget _panelShell({required Widget child}) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DesignTokens.space16),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: DesignTokens.statePanelMaxWidth,
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-
-  static Widget loading({String message = 'Cargando informacion...'}) =>
-      _panelShell(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: DesignTokens.space12),
-            Text(message, textAlign: TextAlign.center),
-          ],
-        ),
-      );
+  static Widget loading({String message = 'Cargando informacion...'}) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: DesignTokens.space12),
+        Text(message, textAlign: TextAlign.center),
+      ],
+    ),
+  );
 
   static Widget error({
     required BuildContext context,
@@ -42,7 +27,7 @@ class StatePanels {
     final verticalGap = width < 380
         ? DesignTokens.space8
         : DesignTokens.space12;
-    return _panelShell(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -67,7 +52,7 @@ class StatePanels {
     VoidCallback? onAction,
   }) {
     final theme = Theme.of(context);
-    return _panelShell(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
