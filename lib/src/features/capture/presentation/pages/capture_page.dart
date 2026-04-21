@@ -267,7 +267,7 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
