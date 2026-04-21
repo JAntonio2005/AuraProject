@@ -105,7 +105,9 @@ class _HistoryPageState extends State<HistoryPage> {
       return StatePanels.empty(context: context, message: emptyMessage);
     } else {
       final width = MediaQuery.sizeOf(context).width;
-      final listPadding = width < 380 ? 8.0 : 12.0;
+      final listPadding = width < DesignTokens.compactWidth
+          ? DesignTokens.space8
+          : DesignTokens.space12;
       return ListView.separated(
         padding: EdgeInsets.all(listPadding),
         itemCount: items.length,
@@ -144,7 +146,8 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < 380;
+    final isCompact = width < DesignTokens.compactWidth;
+    final maxWidth = width >= DesignTokens.wideWidth ? 820.0 : 680.0;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -165,25 +168,30 @@ class _HistoryPageState extends State<HistoryPage> {
         body: AppBackground(
           opacity: DesignTokens.surfaceOpacityLow,
           child: SafeArea(
-            child: TabBarView(
-              children: [
-                // Historial de predicciones
-                _buildHistoryList(
-                  loading: _loadingPred,
-                  error: _errorPred,
-                  items: _predItems,
-                  onRetry: _loadPredictionHistory,
-                  emptyMessage: 'Aún no hay predicciones registradas.',
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: TabBarView(
+                  children: [
+                    // Historial de predicciones
+                    _buildHistoryList(
+                      loading: _loadingPred,
+                      error: _errorPred,
+                      items: _predItems,
+                      onRetry: _loadPredictionHistory,
+                      emptyMessage: 'Aún no hay predicciones registradas.',
+                    ),
+                    // Historial de búsquedas
+                    _buildHistoryList(
+                      loading: _loadingSearch,
+                      error: _errorSearch,
+                      items: _searchItems,
+                      onRetry: _loadSearchHistory,
+                      emptyMessage: 'Aún no hay búsquedas registradas.',
+                    ),
+                  ],
                 ),
-                // Historial de búsquedas
-                _buildHistoryList(
-                  loading: _loadingSearch,
-                  error: _errorSearch,
-                  items: _searchItems,
-                  onRetry: _loadSearchHistory,
-                  emptyMessage: 'Aún no hay búsquedas registradas.',
-                ),
-              ],
+              ),
             ),
           ),
         ),

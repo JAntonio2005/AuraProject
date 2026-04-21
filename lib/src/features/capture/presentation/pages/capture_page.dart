@@ -194,9 +194,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final cam = _controller;
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < 380;
-    final isWide = width >= 900;
+    final isCompact = width < DesignTokens.compactWidth;
+    final isWide = width >= DesignTokens.wideWidth;
     final frameSize = isCompact ? 180.0 : (isWide ? 280.0 : 220.0);
+    final previewMaxWidth = isWide ? 760.0 : 620.0;
     final shutterPadding = isCompact ? 12.0 : 16.0;
     final helperTextSize = isCompact ? 12.0 : 13.0;
 
@@ -208,68 +209,73 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
         child: Column(
           children: [
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(DesignTokens.space12),
-                child: Stack(
-                  children: [
-                    // Preview de cámara o placeholder
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          DesignTokens.radius12,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: previewMaxWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.all(DesignTokens.space12),
+                    child: Stack(
+                      children: [
+                        // Preview de cámara o placeholder
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radius12,
+                            ),
+                            child: cam == null
+                                ? _placeholder()
+                                : FutureBuilder<void>(
+                                    future: _initCameraFuture,
+                                    builder: (context, snap) {
+                                      if (snap.connectionState !=
+                                          ConnectionState.done) {
+                                        return _placeholder(
+                                          text: 'Inicializando cámara...',
+                                        );
+                                      }
+                                      if (!cam.value.isInitialized) {
+                                        return _placeholder(
+                                          text: 'Cámara no disponible',
+                                        );
+                                      }
+                                      return CameraPreview(cam);
+                                    },
+                                  ),
+                          ),
                         ),
-                        child: cam == null
-                            ? _placeholder()
-                            : FutureBuilder<void>(
-                                future: _initCameraFuture,
-                                builder: (context, snap) {
-                                  if (snap.connectionState !=
-                                      ConnectionState.done) {
-                                    return _placeholder(
-                                      text: 'Inicializando cámara...',
-                                    );
-                                  }
-                                  if (!cam.value.isInitialized) {
-                                    return _placeholder(
-                                      text: 'Cámara no disponible',
-                                    );
-                                  }
-                                  return CameraPreview(cam);
-                                },
-                              ),
-                      ),
-                    ),
-                    // Botón de ayuda
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.help_outline),
-                        onPressed: _showHelp,
-                        tooltip: 'Ayuda',
-                      ),
-                    ),
-                    // Marco visual
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: Center(
-                          child: Container(
-                            width: frameSize,
-                            height: frameSize,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white70,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                DesignTokens.radius12,
+                        // Botón de ayuda
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: IconButton(
+                            icon: const Icon(Icons.help_outline),
+                            onPressed: _showHelp,
+                            tooltip: 'Ayuda',
+                          ),
+                        ),
+                        // Marco visual
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: Center(
+                              child: Container(
+                                width: frameSize,
+                                height: frameSize,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.white70,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    DesignTokens.radius12,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -310,7 +316,10 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                       size: isCompact ? 24 : 30,
                     ),
                   ),
-                  const SizedBox(width: 32),
+                  const Opacity(
+                    opacity: 0,
+                    child: Icon(Icons.image_outlined, size: 32),
+                  ),
                 ],
               ),
             ),

@@ -6,7 +6,11 @@ import 'package:aura_pet/src/core/models/breed_summary.dart';
 import 'package:aura_pet/src/features/result/presentation/pages/breed_detail_page.dart';
 import 'package:aura_pet/src/core/routes/services/history_service.dart';
 import 'package:aura_pet/src/core/theme/design_tokens.dart';
+import 'package:aura_pet/src/features/collection/presentation/controllers/collection_pagination_controller.dart';
+import 'package:aura_pet/src/features/collection/presentation/state/breeds_pagination_state.dart';
+import 'package:aura_pet/src/features/collection/presentation/widgets/breeds_paginator.dart';
 import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
+import 'package:aura_pet/src/widgets/state_panels.dart';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -16,12 +20,21 @@ class CollectionPage extends StatefulWidget {
 }
 
 class _CollectionPageState extends State<CollectionPage> {
+  static const int _pageSize = 12;
+
   final _breedsService = BreedsService();
   final _searchCtrl = TextEditingController();
   final _historyService = HistoryService();
+  final _paginationController = CollectionPaginationController();
 
   List<BreedSummary> _allBreeds = [];
   List<BreedSummary> _filteredBreeds = [];
+  BreedsPaginationState _paginationState = const BreedsPaginationState(
+    currentPage: 1,
+    pageSize: _pageSize,
+    totalItems: 0,
+  );
+  String _lastAppliedQuery = '';
   bool _loading = true;
   String? _error;
 
@@ -57,6 +70,11 @@ class _CollectionPageState extends State<CollectionPage> {
       setState(() {
         _allBreeds = breeds;
         _filteredBreeds = breeds;
+        _lastAppliedQuery = '';
+        _paginationState = _paginationController.onQueryChanged(
+          pageSize: _pageSize,
+          totalItems: breeds.length,
+        );
         _loading = false;
       });
     } catch (e) {
@@ -69,22 +87,54 @@ class _CollectionPageState extends State<CollectionPage> {
 
   void _applyFilter() {
     final query = _searchCtrl.text.trim().toLowerCase();
-    if (query.isEmpty) {
-      setState(() {
-        _filteredBreeds = _allBreeds;
-      });
-      return;
-    }
+    final filtered = query.isEmpty
+        ? _allBreeds
+        : _allBreeds.where((b) {
+            final name = b.name.toLowerCase();
+            final slug = b.slug.toLowerCase();
+            final label = b.label.toLowerCase();
+            return name.contains(query) ||
+                slug.contains(query) ||
+                label.contains(query);
+          }).toList();
+    final queryChanged = query != _lastAppliedQuery;
 
     setState(() {
-      _filteredBreeds = _allBreeds.where((b) {
-        final name = b.name.toLowerCase();
-        final slug = b.slug.toLowerCase();
-        final label = b.label.toLowerCase();
-        return name.contains(query) ||
-            slug.contains(query) ||
-            label.contains(query);
-      }).toList();
+      _filteredBreeds = filtered;
+      // Regla US2 explicita: cualquier cambio real de query reinicia paginacion.
+      _paginationState = queryChanged
+          ? _paginationController.onQueryChanged(
+              pageSize: _paginationState.pageSize,
+              totalItems: filtered.length,
+            )
+          : _paginationController.buildState(
+              currentPage: _paginationState.currentPage,
+              pageSize: _paginationState.pageSize,
+              totalItems: filtered.length,
+            );
+      _lastAppliedQuery = query;
+    });
+  }
+
+  void _goToPreviousPage() {
+    if (!_paginationState.hasPreviousPage) return;
+    setState(() {
+      _paginationState = _paginationController.buildState(
+        currentPage: _paginationState.currentPage - 1,
+        pageSize: _paginationState.pageSize,
+        totalItems: _filteredBreeds.length,
+      );
+    });
+  }
+
+  void _goToNextPage() {
+    if (!_paginationState.hasNextPage) return;
+    setState(() {
+      _paginationState = _paginationController.buildState(
+        currentPage: _paginationState.currentPage + 1,
+        pageSize: _paginationState.pageSize,
+        totalItems: _filteredBreeds.length,
+      );
     });
   }
 
@@ -138,35 +188,30 @@ class _CollectionPageState extends State<CollectionPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < 380;
-    final isWide = width >= 900;
+    final isCompact = width < DesignTokens.compactWidth;
+    final isWide = width >= DesignTokens.wideWidth;
     final listMaxWidth = isWide ? 980.0 : 760.0;
+    final horizontalPadding = isCompact
+        ? DesignTokens.space12
+        : DesignTokens.space16;
     final gridCount = width >= 980 ? 4 : (width >= 700 ? 3 : 2);
     final gridAspect = isCompact ? 0.82 : 0.9;
 
     Widget body;
     if (_loading) {
-      body = const Center(child: CircularProgressIndicator());
+      body = StatePanels.loading();
     } else if (_error != null) {
-      body = Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _loadBreeds,
-              child: const Text('Reintentar'),
-            ),
-          ],
-        ),
+      body = StatePanels.error(
+        context: context,
+        message: _error!,
+        onRetry: _loadBreeds,
       );
     } else {
       final recentBreeds = _filteredBreeds.take(6).toList();
+      final pageBreeds = _paginationController.pageSlice(
+        source: _filteredBreeds,
+        state: _paginationState,
+      );
 
       body = SafeArea(
         child: Center(
@@ -174,9 +219,9 @@ class _CollectionPageState extends State<CollectionPage> {
             constraints: BoxConstraints(maxWidth: listMaxWidth),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(
-                DesignTokens.space16,
                 DesignTokens.space12,
-                DesignTokens.space16,
+                DesignTokens.space12,
+                DesignTokens.space12,
                 DesignTokens.space16,
               ),
               children: [
@@ -264,6 +309,15 @@ class _CollectionPageState extends State<CollectionPage> {
                     filled: true,
                   ),
                 ),
+                const SizedBox(height: DesignTokens.space8),
+                Text(
+                  _filteredBreeds.isEmpty
+                      ? '0 resultados disponibles'
+                      : '${_paginationState.startIndex + 1}-${_paginationState.endExclusive} de ${_filteredBreeds.length} resultados',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
                 const SizedBox(height: DesignTokens.space16),
                 Text(
                   'Reciente',
@@ -300,27 +354,58 @@ class _CollectionPageState extends State<CollectionPage> {
                   ),
                 ),
                 const SizedBox(height: DesignTokens.space12),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _filteredBreeds.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: gridCount,
-                    mainAxisSpacing: DesignTokens.space12,
-                    crossAxisSpacing: DesignTokens.space12,
-                    childAspectRatio: gridAspect,
+                if (_filteredBreeds.isEmpty)
+                  StatePanels.empty(
+                    context: context,
+                    message:
+                        'Sin resultados. No encontramos razas para tu busqueda actual. Intenta otro termino.',
+                  )
+                else ...[
+                  Container(
+                    padding: EdgeInsets.all(horizontalPadding),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radius16,
+                      ),
+                    ),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: pageBreeds.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: gridCount,
+                        mainAxisSpacing: DesignTokens.space12,
+                        crossAxisSpacing: DesignTokens.space12,
+                        childAspectRatio: gridAspect,
+                      ),
+                      itemBuilder: (context, index) {
+                        final breed = pageBreeds[index];
+                        final color =
+                            _cardPalette[(index + 1) % _cardPalette.length];
+                        return _ExploreBreedCard(
+                          breed: breed,
+                          color: color,
+                          onTap: () => _onTapBreed(breed),
+                        );
+                      },
+                    ),
                   ),
-                  itemBuilder: (context, index) {
-                    final breed = _filteredBreeds[index];
-                    final color =
-                        _cardPalette[(index + 1) % _cardPalette.length];
-                    return _ExploreBreedCard(
-                      breed: breed,
-                      color: color,
-                      onTap: () => _onTapBreed(breed),
-                    );
-                  },
-                ),
+                  const SizedBox(height: DesignTokens.space16),
+                  BreedsPaginator(
+                    currentPage: _paginationState.currentPage,
+                    totalPages: _paginationState.totalPages,
+                    totalItems: _filteredBreeds.length,
+                    startItem: _filteredBreeds.isEmpty
+                        ? 0
+                        : _paginationState.startIndex + 1,
+                    endItem: _paginationState.endExclusive,
+                    onPrevious: _paginationState.hasPreviousPage
+                        ? _goToPreviousPage
+                        : null,
+                    onNext: _paginationState.hasNextPage ? _goToNextPage : null,
+                  ),
+                ],
               ],
             ),
           ),

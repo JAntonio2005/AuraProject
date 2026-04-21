@@ -101,11 +101,18 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
-    final isCompact = width < 380;
-    final isWide = width >= 900;
-    final horizontalPadding = isCompact ? 16.0 : 24.0;
+    final isCompact = width < DesignTokens.compactWidth;
+    final isWide = width >= DesignTokens.wideWidth;
+    final horizontalPadding = isCompact
+        ? DesignTokens.space16
+        : DesignTokens.space24;
+    final verticalPadding = isCompact
+        ? DesignTokens.space12
+        : DesignTokens.space20;
     final cardMaxWidth = isWide ? 560.0 : 460.0;
-    final primaryCtaHeight = isCompact ? 46.0 : 52.0;
+    final primaryCtaHeight = isCompact
+        ? DesignTokens.buttonHeightCompact
+        : DesignTokens.buttonHeightLarge;
 
     return Scaffold(
       extendBodyBehindAppBar: true, // para que el fondo cubra toda la pantalla
@@ -133,9 +140,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
-                    16,
+                    verticalPadding,
                     horizontalPadding,
-                    16,
+                    verticalPadding,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: DesignTokens.space24),
 
                       Container(
                         padding: const EdgeInsets.all(DesignTokens.space16),
@@ -193,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 validator: _validateEmail,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: DesignTokens.space12),
                               TextFormField(
                                 controller: _passCtrl,
                                 obscureText: _obscure,
@@ -216,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 validator: _validatePassword,
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: DesignTokens.space8),
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
@@ -229,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
                                   child: const Text('Recuperar contraseña'),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: DesignTokens.space8),
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
@@ -239,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: DesignTokens.space8),
                               SizedBox(
                                 width: double.infinity,
                                 height: primaryCtaHeight,
@@ -256,7 +263,7 @@ class _LoginPageState extends State<LoginPage> {
                                       : const Text('Continuar'),
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: DesignTokens.space12),
                               SizedBox(
                                 width: double.infinity,
                                 height: 44,
