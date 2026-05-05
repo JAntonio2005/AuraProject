@@ -21,9 +21,16 @@ class AppNavigationBar extends StatelessWidget {
     final navHeight = isCompact ? 72.0 : 80.0;
     final iconSize = isCompact ? 22.0 : 24.0;
     final labelSize = isCompact ? 11.0 : 12.0;
+    const backgroundColor = Color(0xFFCBD9FF);
+    const indicatorColor = Color(0x4D7FA2F3);
+    final selectedOutline = Theme.of(
+      context,
+    ).colorScheme.primary.withValues(alpha: 0.18);
 
     return NavigationBar(
       height: navHeight,
+      backgroundColor: backgroundColor,
+      indicatorColor: indicatorColor,
       selectedIndex: currentIndex,
       labelBehavior: DesignTokens.navLabelBehavior,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -37,8 +44,20 @@ class AppNavigationBar extends StatelessWidget {
       destinations: AppDestinations.mainNav
           .map(
             (d) => NavigationDestination(
-              icon: Icon(d.icon, size: iconSize),
-              selectedIcon: Icon(d.selectedIcon, size: iconSize),
+              icon: Icon(d.icon, size: iconSize, color: Colors.black87),
+              selectedIcon: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: selectedOutline, width: 1.2),
+                ),
+                child: Icon(
+                  d.selectedIcon,
+                  size: iconSize + 2,
+                  color: Colors.black,
+                ),
+              ),
               label: d.label,
               tooltip: d.label,
             ),
