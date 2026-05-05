@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:aura_pet/src/widgets/app_background.dart';
+import 'package:aura_pet/src/core/routes/app_destinations.dart';
 import 'package:aura_pet/src/core/routes/services/predict_service.dart'; // 👈 NUEVO
 import 'package:aura_pet/src/core/theme/design_tokens.dart';
 import 'package:aura_pet/src/widgets/app_navigation_bar.dart';
@@ -310,14 +311,24 @@ class _CapturePageState extends State<CapturePage> with WidgetsBindingObserver {
                       size: isCompact ? 24 : 30,
                     ),
                   ),
-                  const SizedBox(width: 32),
+                  IconButton(
+                    iconSize: 32,
+                    icon: const Icon(Icons.history_outlined),
+                    onPressed: _isScanning
+                        ? null
+                        : () => Navigator.pushNamed(
+                            context,
+                            AppDestinations.history,
+                          ),
+                    tooltip: 'Historial',
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: const AppNavigationBar(currentIndex: 1),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 2),
     );
   }
 

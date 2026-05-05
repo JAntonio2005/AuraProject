@@ -19,11 +19,15 @@ class _CollectionPageState extends State<CollectionPage> {
   final _breedsService = BreedsService();
   final _searchCtrl = TextEditingController();
   final _historyService = HistoryService();
+  static const int _pageSize = 20;
 
   List<BreedSummary> _allBreeds = [];
   List<BreedSummary> _filteredBreeds = [];
   bool _loading = true;
   String? _error;
+  bool _showExploreBanner = true;
+  BreedSizeFilter _sizeFilter = BreedSizeFilter.all;
+  int _currentPage = 1;
 
   final List<Color> _cardPalette = const [
     Color(0xFF8A83D6),
@@ -57,6 +61,7 @@ class _CollectionPageState extends State<CollectionPage> {
       setState(() {
         _allBreeds = breeds;
         _filteredBreeds = breeds;
+        _currentPage = 1;
         _loading = false;
       });
     } catch (e) {
@@ -69,23 +74,85 @@ class _CollectionPageState extends State<CollectionPage> {
 
   void _applyFilter() {
     final query = _searchCtrl.text.trim().toLowerCase();
-    if (query.isEmpty) {
-      setState(() {
-        _filteredBreeds = _allBreeds;
-      });
-      return;
-    }
-
     setState(() {
       _filteredBreeds = _allBreeds.where((b) {
         final name = b.name.toLowerCase();
         final slug = b.slug.toLowerCase();
         final label = b.label.toLowerCase();
-        return name.contains(query) ||
+        final matchesQuery =
+            query.isEmpty ||
+            name.contains(query) ||
             slug.contains(query) ||
             label.contains(query);
+        final matchesSize = _matchesSizeFilter(b, _sizeFilter);
+        return matchesQuery && matchesSize;
       }).toList();
+      _currentPage = 1;
     });
+  }
+
+  bool _matchesSizeFilter(BreedSummary breed, BreedSizeFilter filter) {
+    if (filter == BreedSizeFilter.all) return true;
+    return _inferBreedSize(breed) == filter;
+  }
+
+  BreedSizeFilter _inferBreedSize(BreedSummary breed) {
+    final text =
+        '${breed.name} ${breed.label} ${breed.slug} ${breed.description ?? ''}'
+            .toLowerCase();
+
+    const smallTokens = [
+      'small',
+      'mini',
+      'toy',
+      'pequ',
+      'chihuahua',
+      'pomeranian',
+      'yorkshire',
+      'shih',
+      'pug',
+      'bichon',
+      'pinscher',
+      'poodle toy',
+      'dachshund',
+    ];
+
+    const mediumTokens = [
+      'medium',
+      'mediano',
+      'beagle',
+      'cocker',
+      'bulldog',
+      'border collie',
+      'husky',
+      'setter',
+      'spaniel',
+    ];
+
+    const largeTokens = [
+      'large',
+      'giant',
+      'gigante',
+      'labrador',
+      'golden',
+      'rottweiler',
+      'mastiff',
+      'doberman',
+      'pastor aleman',
+      'gran danes',
+      'bernese',
+      'shepherd',
+    ];
+
+    if (smallTokens.any(text.contains)) return BreedSizeFilter.small;
+    if (largeTokens.any(text.contains)) return BreedSizeFilter.large;
+    if (mediumTokens.any(text.contains)) return BreedSizeFilter.medium;
+
+    // Fallback estable para no dejar razas sin clasificar.
+    final mod = breed.id % 3;
+    if (mod == 0) return BreedSizeFilter.small;
+    if (mod == 1) return BreedSizeFilter.medium;
+    return BreedSizeFilter.large;
   }
 
   /// 🔹 Cuando el usuario pulsa "buscar" en el teclado
@@ -167,6 +234,15 @@ class _CollectionPageState extends State<CollectionPage> {
       );
     } else {
       final recentBreeds = _filteredBreeds.take(6).toList();
+      final totalPages = _filteredBreeds.isEmpty
+          ? 1
+          : (_filteredBreeds.length / _pageSize).ceil();
+      final safeCurrentPage = _currentPage.clamp(1, totalPages);
+      final startIndex = (safeCurrentPage - 1) * _pageSize;
+      final endIndex = (startIndex + _pageSize > _filteredBreeds.length)
+          ? _filteredBreeds.length
+          : startIndex + _pageSize;
+      final currentPageBreeds = _filteredBreeds.sublist(startIndex, endIndex);
 
       body = SafeArea(
         child: Center(
@@ -180,61 +256,56 @@ class _CollectionPageState extends State<CollectionPage> {
                 DesignTokens.space16,
               ),
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: const Color(0xFFEAD8CC),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: const Icon(Icons.pets, color: Color(0xFF7A5D4F)),
+                if (_showExploreBanner)
+                  Container(
+                    padding: const EdgeInsets.all(DesignTokens.space12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF82C400),
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radius16,
                       ),
                     ),
-                    const SizedBox(width: DesignTokens.space12),
-                    Text(
-                      'Nicole',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF3E2D25),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DesignTokens.space12),
-                Container(
-                  padding: const EdgeInsets.all(DesignTokens.space12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8CC300),
-                    borderRadius: BorderRadius.circular(DesignTokens.radius16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.family_restroom, color: Colors.white),
-                      const SizedBox(width: DesignTokens.space12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'En familia',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.groups_2, color: Colors.white),
+                        const SizedBox(width: DesignTokens.space12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Explora y cuida',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: DesignTokens.space4),
-                            Text(
-                              'Descubre juntos nuevas razas y sus cuidados.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.92),
+                              const SizedBox(height: DesignTokens.space4),
+                              Text(
+                                'Conoce razas y aprende a cuidarlas mejor.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        IconButton(
+                          onPressed: () {
+                            setState(() => _showExploreBanner = false);
+                          },
+                          icon: const Icon(Icons.close),
+                          color: Colors.white,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.22,
+                            ),
+                          ),
+                          tooltip: 'Cerrar',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: DesignTokens.space12),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -246,22 +317,83 @@ class _CollectionPageState extends State<CollectionPage> {
                   ),
                 ),
                 const SizedBox(height: DesignTokens.space8),
-                TextField(
-                  controller: _searchCtrl,
-                  onSubmitted: _onSearchSubmitted,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar raza',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: () => _onSearchSubmitted(_searchCtrl.text),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        DesignTokens.radius16,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchCtrl,
+                        onSubmitted: _onSearchSubmitted,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar raza',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radius16,
+                            ),
+                          ),
+                          filled: true,
+                        ),
                       ),
                     ),
-                    filled: true,
+                    const SizedBox(width: DesignTokens.space8),
+                    SizedBox(
+                      height: 52,
+                      width: 52,
+                      child: PopupMenuButton<BreedSizeFilter>(
+                        tooltip: 'Filtrar por tamaño',
+                        onSelected: (selected) {
+                          setState(() => _sizeFilter = selected);
+                          _applyFilter();
+                        },
+                        itemBuilder: (context) => [
+                          CheckedPopupMenuItem<BreedSizeFilter>(
+                            value: BreedSizeFilter.all,
+                            checked: _sizeFilter == BreedSizeFilter.all,
+                            child: const Text('Todo'),
+                          ),
+                          CheckedPopupMenuItem<BreedSizeFilter>(
+                            value: BreedSizeFilter.small,
+                            checked: _sizeFilter == BreedSizeFilter.small,
+                            child: const Text('Razas pequeñas'),
+                          ),
+                          CheckedPopupMenuItem<BreedSizeFilter>(
+                            value: BreedSizeFilter.medium,
+                            checked: _sizeFilter == BreedSizeFilter.medium,
+                            child: const Text('Razas medianas'),
+                          ),
+                          CheckedPopupMenuItem<BreedSizeFilter>(
+                            value: BreedSizeFilter.large,
+                            checked: _sizeFilter == BreedSizeFilter.large,
+                            child: const Text('Razas grandes'),
+                          ),
+                        ],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radius16,
+                            ),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
+                            ),
+                          ),
+                          child: const Center(child: Icon(Icons.tune)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: DesignTokens.space8),
+                Text(
+                  _filteredBreeds.isEmpty
+                      ? '0 resultados'
+                      : '${startIndex + 1}-$endIndex de ${_filteredBreeds.length} resultados',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF6D6D6D),
                   ),
                 ),
                 const SizedBox(height: DesignTokens.space16),
@@ -303,7 +435,7 @@ class _CollectionPageState extends State<CollectionPage> {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _filteredBreeds.length,
+                  itemCount: currentPageBreeds.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: gridCount,
                     mainAxisSpacing: DesignTokens.space12,
@@ -311,7 +443,7 @@ class _CollectionPageState extends State<CollectionPage> {
                     childAspectRatio: gridAspect,
                   ),
                   itemBuilder: (context, index) {
-                    final breed = _filteredBreeds[index];
+                    final breed = currentPageBreeds[index];
                     final color =
                         _cardPalette[(index + 1) % _cardPalette.length];
                     return _ExploreBreedCard(
@@ -320,6 +452,42 @@ class _CollectionPageState extends State<CollectionPage> {
                       onTap: () => _onTapBreed(breed),
                     );
                   },
+                ),
+                const SizedBox(height: DesignTokens.space12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: safeCurrentPage > 1
+                          ? () {
+                              setState(() {
+                                _currentPage = safeCurrentPage - 1;
+                              });
+                            }
+                          : null,
+                      icon: const Icon(Icons.chevron_left),
+                      tooltip: 'Anterior',
+                    ),
+                    const SizedBox(width: DesignTokens.space12),
+                    Text(
+                      'Página $safeCurrentPage de $totalPages',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: DesignTokens.space12),
+                    IconButton(
+                      onPressed: safeCurrentPage < totalPages
+                          ? () {
+                              setState(() {
+                                _currentPage = safeCurrentPage + 1;
+                              });
+                            }
+                          : null,
+                      icon: const Icon(Icons.chevron_right),
+                      tooltip: 'Siguiente',
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -355,55 +523,91 @@ class _RecentBreedCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DesignTokens.radius16),
       child: Container(
         width: 292,
-        padding: const EdgeInsets.all(DesignTokens.space12),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(DesignTokens.radius16),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Container(
-              height: 6,
-              width: 72,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(100),
-              ),
-            ),
-            const SizedBox(height: DesignTokens.space12),
-            Text(
-              'Guía reciente',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-            const SizedBox(height: DesignTokens.space4),
-            Text(
-              breed.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const Spacer(),
-            Row(
-              children: [
-                const Icon(Icons.pets, color: Colors.white),
-                const SizedBox(width: DesignTokens.space8),
-                Expanded(
-                  child: Text(
-                    breed.label.isNotEmpty ? breed.label : 'Raza destacada',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                    ),
+            if (breed.imageUrl != null && breed.imageUrl!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                child: Image.network(
+                  breed.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: color.withValues(alpha: 0.5)),
+                ),
+              )
+            else
+              Container(color: color.withValues(alpha: 0.5)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(DesignTokens.radius16),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.28),
+                      Colors.black.withValues(alpha: 0.42),
+                    ],
                   ),
                 ),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.all(DesignTokens.space12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 6,
+                        width: 72,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                      const SizedBox(height: DesignTokens.space12),
+                      Text(
+                        'Guía reciente',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: DesignTokens.space4),
+                      Text(
+                        breed.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          const Icon(Icons.pets, color: Colors.white),
+                          const SizedBox(width: DesignTokens.space8),
+                          Expanded(
+                            child: Text(
+                              breed.label.isNotEmpty
+                                  ? breed.label
+                                  : 'Raza destacada',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -430,50 +634,84 @@ class _ExploreBreedCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(DesignTokens.radius16),
       child: Container(
-        padding: const EdgeInsets.all(DesignTokens.space12),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(DesignTokens.radius16),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DesignTokens.space8,
-                vertical: DesignTokens.space4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: Text(
-                'Raza',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+            if (breed.imageUrl != null && breed.imageUrl!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(DesignTokens.radius16),
+                child: Image.network(
+                  breed.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: color.withValues(alpha: 0.5)),
                 ),
-              ),
-            ),
-            const Spacer(),
-            Text(
-              breed.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: DesignTokens.space4),
-            Text(
-              breed.description?.isNotEmpty == true
-                  ? breed.description!
-                  : 'Conoce más sobre esta raza.',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.92),
+              )
+            else
+              Container(color: color.withValues(alpha: 0.5)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(DesignTokens.radius16),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.22),
+                      Colors.black.withValues(alpha: 0.44),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(DesignTokens.space12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DesignTokens.space8,
+                          vertical: DesignTokens.space4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          'Raza',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        breed.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: DesignTokens.space4),
+                      Text(
+                        breed.description?.isNotEmpty == true
+                            ? breed.description!
+                            : 'Conoce más sobre esta raza.',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -482,3 +720,5 @@ class _ExploreBreedCard extends StatelessWidget {
     );
   }
 }
+
+enum BreedSizeFilter { all, small, medium, large }

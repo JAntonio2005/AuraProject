@@ -67,9 +67,6 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
     final code = _codeCtrl.text.trim();
     final newPassword = _passCtrl.text.trim();
 
-    final code = _codeCtrl.text.trim();
-    final newPassword = _passCtrl.text.trim();
-
     setState(() => _loading = true);
     try {
       await _authService.confirmPasswordReset(

@@ -19,7 +19,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _loading = true;
   String? _name;
   String? _email;
-  String? _error;
+  bool _isAuthenticated = false;
+  String? _organization;
 
   @override
   void initState() {
@@ -30,7 +31,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfile() async {
     setState(() {
       _loading = true;
-      _error = null;
     });
 
     try {
@@ -42,23 +42,28 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _name = (data['full_name'] ?? '').toString().trim();
         _email = (data['email'] ?? '').toString().trim();
+        _organization = (data['organization'] ?? 'Refugio Huellas Seguras')
+            .toString()
+            .trim();
+        _isAuthenticated = true;
         _loading = false;
       });
     } on DioException catch (e) {
-      String message = 'No se pudo cargar tu perfil';
-
       final status = e.response?.statusCode;
       if (status == 401) {
-        message = 'Sesión expirada. Inicia sesión de nuevo.';
+        setState(() {
+          _isAuthenticated = false;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _isAuthenticated = false;
+          _loading = false;
+        });
       }
-
-      setState(() {
-        _error = message;
-        _loading = false;
-      });
     } catch (_) {
       setState(() {
-        _error = 'Error inesperado al cargar tu perfil';
+        _isAuthenticated = false;
         _loading = false;
       });
     }
@@ -110,32 +115,17 @@ class _ProfilePageState extends State<ProfilePage> {
     final isCompact = width < 380;
     final isWide = width >= 900;
     final maxWidth = isWide ? 700.0 : 560.0;
-    final avatarRadius = isCompact ? 38.0 : 46.0;
 
     Widget body;
     if (_loading) {
       body = const Center(child: CircularProgressIndicator());
-    } else if (_error != null) {
-      body = Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _loadProfile,
-              child: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      );
-    } else {
+    } else if (_isAuthenticated) {
+      // Usuario autenticado
       final name = _name?.isNotEmpty == true ? _name! : 'Usuario Aura';
       final email = _email?.isNotEmpty == true ? _email! : 'usuario@aura.app';
+      final organization = _organization?.isNotEmpty == true
+          ? _organization!
+          : 'Refugio Huellas Seguras';
 
       body = Center(
         child: ConstrainedBox(
@@ -148,123 +138,233 @@ class _ProfilePageState extends State<ProfilePage> {
               DesignTokens.space24,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Avatar
-                CircleAvatar(
-                  radius: avatarRadius,
-                  child: Text(
-                    _buildInitials(),
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Accion principal',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space4),
-
-                Text(
-                  name,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space4),
-                Text(
-                  email,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space32),
-
-                // Nombre (solo lectura)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Nombre',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space4),
+                // Tarjeta de perfil
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
+                  padding: const EdgeInsets.all(DesignTokens.space16),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
+                    color: theme.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(DesignTokens.radius18),
                     border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
                     ),
                   ),
-                  child: Text(name),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            child: Text(
+                              _buildInitials(),
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: DesignTokens.space16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: DesignTokens.space4),
+                                Text(
+                                  email,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: DesignTokens.space16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Organización de rescate:',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                const SizedBox(height: DesignTokens.space4),
+                                Text(
+                                  organization,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: DesignTokens.space16),
+                const SizedBox(height: DesignTokens.space24),
 
-                // Correo (solo lectura)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Correo',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space4),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(DesignTokens.radius12),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Text(email),
-                ),
-
-                const SizedBox(height: DesignTokens.space32),
-
-                // 🔹 Sección "Acerca de"
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Acerca de',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DesignTokens.space8),
+                // Botones de acción
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _showAbout,
-                    icon: const Icon(Icons.info_outline),
-                    label: const Text('Acerca de Aura Pet'),
+                  child: FilledButton(
+                    onPressed: () {},
+                    child: const Text('Editar datos'),
                   ),
                 ),
+                const SizedBox(height: DesignTokens.space12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _showAbout,
+                    child: const Text('Acerca de'),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade600,
+                      side: BorderSide(color: Colors.red.shade600),
+                    ),
+                    child: const Text('Cerrar sesión'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Usuario invitado
+      body = Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
+              DesignTokens.space24,
+              isCompact ? DesignTokens.space12 : DesignTokens.space16,
+              DesignTokens.space24,
+            ),
+            child: Column(
+              children: [
+                // Tarjeta de usuario invitado
+                Container(
+                  padding: const EdgeInsets.all(DesignTokens.space16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(DesignTokens.radius18),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            child: Icon(
+                              Icons.person_outline,
+                              size: 28,
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: DesignTokens.space16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Usuario Invitado',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: DesignTokens.space4),
+                                Text(
+                                  'invitado@aura.app',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: DesignTokens.space16),
+                      Container(
+                        padding: const EdgeInsets.all(DesignTokens.space12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            DesignTokens.radius12,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: DesignTokens.space8),
+                            Expanded(
+                              child: Text(
+                                'Estás navegando como invitado. Inicia sesión para acceder a todas las funciones.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space24),
 
-                const SizedBox(height: DesignTokens.space16),
-                // Aquí luego podrías meter un botón de Cerrar sesión, por ejemplo
+                // Botones de acción
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {},
+                    child: const Text('Iniciar sesión'),
+                  ),
+                ),
+                const SizedBox(height: DesignTokens.space12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _showAbout,
+                    child: const Text('Acerca de'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -274,11 +374,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 👈 SIN flecha de back
-        title: const Text('Mi perfil'),
+        automaticallyImplyLeading: false,
+        title: const Text('Perfil'),
       ),
       body: AppBackground(opacity: DesignTokens.surfaceOpacityLow, child: body),
-      bottomNavigationBar: const AppNavigationBar(currentIndex: 4),
+      bottomNavigationBar: const AppNavigationBar(currentIndex: 3),
     );
   }
 }

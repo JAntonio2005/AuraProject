@@ -187,7 +187,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
           ),
         ),
-        bottomNavigationBar: const AppNavigationBar(currentIndex: 3),
+        bottomNavigationBar: const AppNavigationBar(currentIndex: 2),
       ),
     );
   }
