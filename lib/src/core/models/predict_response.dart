@@ -21,11 +21,17 @@ class PredictionItem {
 
 class PredictResponse {
   final int logId;
+  final bool recognized;
+  final String? message;
+  final Map<String, dynamic>? info;
   final PredictionItem top1;
   final List<PredictionItem> top5;
 
   PredictResponse({
     required this.logId,
+    required this.recognized,
+    this.message,
+    this.info,
     required this.top1,
     required this.top5,
   });
@@ -33,6 +39,11 @@ class PredictResponse {
   factory PredictResponse.fromJson(Map<String, dynamic> json) {
     return PredictResponse(
       logId: json['log_id'] as int,
+      recognized: json['recognized'] as bool? ?? true,
+      message: json['message']?.toString(),
+      info: json['info'] is Map<String, dynamic>
+          ? json['info'] as Map<String, dynamic>
+          : null,
       top1: PredictionItem.fromJson(json['top1'] as Map<String, dynamic>),
       top5: (json['top5'] as List<dynamic>)
           .map((e) => PredictionItem.fromJson(e as Map<String, dynamic>))

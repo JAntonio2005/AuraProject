@@ -1,6 +1,26 @@
 // lib/src/core/services/api_client.dart
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+String _resolveBaseUrl() {
+  const envBaseUrl = String.fromEnvironment('BASE_URL', defaultValue: '');
+  if (envBaseUrl.isNotEmpty) {
+    return envBaseUrl;
+  }
+
+  if (kIsWeb) {
+    return 'http://127.0.0.1:8000';
+  }
+
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:8000';
+  }
+
+  return 'http://127.0.0.1:8000';
+}
 
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -29,9 +49,7 @@ class ApiClient {
   ApiClient._internal() {
     dio = Dio(
       BaseOptions(
-        // baseUrl: 'http://127.0.0.1:8000',
-        //baseUrl: 'http://192.168.100.11:8000',
-        baseUrl: 'https://aura-ml-api-latest.onrender.com',
+        baseUrl: _resolveBaseUrl(),
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
       ),
