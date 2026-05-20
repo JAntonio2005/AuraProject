@@ -26,7 +26,11 @@ class PredictService {
         ),
       });
 
-      final response = await _dio.post('/predict', data: formData);
+      final response = await _dio.post(
+        '/predict',
+        data: formData,
+        queryParameters: {'enrich': true},
+      );
 
       if (kDebugMode) {
         debugPrint(
@@ -35,7 +39,10 @@ class PredictService {
         );
       }
 
-      return PredictResponse.fromJson(response.data as Map<String, dynamic>);
+      return PredictResponse.fromJson(
+        response.data as Map<String, dynamic>,
+        baseUrl: _dio.options.baseUrl,
+      );
     } on DioException catch (e) {
       if (kDebugMode) {
         debugPrint('[PredictService] Dio error type: ${e.type}');

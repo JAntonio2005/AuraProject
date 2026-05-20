@@ -93,66 +93,7 @@ class _CollectionPageState extends State<CollectionPage> {
 
   bool _matchesSizeFilter(BreedSummary breed, BreedSizeFilter filter) {
     if (filter == BreedSizeFilter.all) return true;
-    return _inferBreedSize(breed) == filter;
-  }
-
-  BreedSizeFilter _inferBreedSize(BreedSummary breed) {
-    final text =
-        '${breed.name} ${breed.label} ${breed.slug} ${breed.description ?? ''}'
-            .toLowerCase();
-
-    const smallTokens = [
-      'small',
-      'mini',
-      'toy',
-      'pequ',
-      'chihuahua',
-      'pomeranian',
-      'yorkshire',
-      'shih',
-      'pug',
-      'bichon',
-      'pinscher',
-      'poodle toy',
-      'dachshund',
-    ];
-
-    const mediumTokens = [
-      'medium',
-      'mediano',
-      'beagle',
-      'cocker',
-      'bulldog',
-      'border collie',
-      'husky',
-      'setter',
-      'spaniel',
-    ];
-
-    const largeTokens = [
-      'large',
-      'giant',
-      'gigante',
-      'labrador',
-      'golden',
-      'rottweiler',
-      'mastiff',
-      'doberman',
-      'pastor aleman',
-      'gran danes',
-      'bernese',
-      'shepherd',
-    ];
-
-    if (smallTokens.any(text.contains)) return BreedSizeFilter.small;
-    if (largeTokens.any(text.contains)) return BreedSizeFilter.large;
-    if (mediumTokens.any(text.contains)) return BreedSizeFilter.medium;
-
-    // Fallback estable para no dejar razas sin clasificar.
-    final mod = breed.id % 3;
-    if (mod == 0) return BreedSizeFilter.small;
-    if (mod == 1) return BreedSizeFilter.medium;
-    return BreedSizeFilter.large;
+    return _normalizeBreedSize(breed.size) == filter;
   }
 
   /// 🔹 Cuando el usuario pulsa "buscar" en el teclado
@@ -194,8 +135,15 @@ class _CollectionPageState extends State<CollectionPage> {
       arguments: BreedDetailArgs(
         id: breed.id.toString(),
         name: breed.name,
+        slug: breed.slug,
+        label: breed.label,
         description: breed.description,
         imageUrl: breed.imageUrl,
+        images: breed.images,
+        temperament: breed.temperament,
+        origin: breed.origin,
+        size: breed.size,
+        lifeSpan: breed.lifeSpan,
         confidence: null, // aquí normalmente no hay confianza de IA
       ),
     );
@@ -630,6 +578,7 @@ class _ExploreBreedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final sizeLabel = _breedSizeLabel(breed.size);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(DesignTokens.radius16),
@@ -671,23 +620,24 @@ class _ExploreBreedCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DesignTokens.space8,
-                          vertical: DesignTokens.space4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Text(
-                          'Raza',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                      if (sizeLabel != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DesignTokens.space8,
+                            vertical: DesignTokens.space4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Text(
+                            sizeLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ),
                       const Spacer(),
                       Text(
                         breed.name,
@@ -718,6 +668,42 @@ class _ExploreBreedCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+BreedSizeFilter? _normalizeBreedSize(String? rawSize) {
+  final size = rawSize?.trim().toLowerCase();
+  if (size == null || size.isEmpty) return null;
+
+  if (size.contains('peque') ||
+      size.contains('small') ||
+      size.contains('toy')) {
+    return BreedSizeFilter.small;
+  }
+  if (size.contains('median') || size.contains('medium')) {
+    return BreedSizeFilter.medium;
+  }
+  if (size.contains('grand') ||
+      size.contains('large') ||
+      size.contains('giant')) {
+    return BreedSizeFilter.large;
+  }
+
+  return null;
+}
+
+String? _breedSizeLabel(String? rawSize) {
+  final normalized = _normalizeBreedSize(rawSize);
+  switch (normalized) {
+    case BreedSizeFilter.small:
+      return 'Pequeña';
+    case BreedSizeFilter.medium:
+      return 'Mediana';
+    case BreedSizeFilter.large:
+      return 'Grande';
+    case BreedSizeFilter.all:
+    case null:
+      return null;
   }
 }
 

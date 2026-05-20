@@ -9,8 +9,6 @@ class BreedsService {
 
   BreedsService() : _dio = ApiClient().dio;
 
-  // lib/src/core/services/breeds_service.dart
-
   Future<List<BreedSummary>> getAllBreeds() async {
     try {
       if (kDebugMode) {
@@ -29,13 +27,21 @@ class BreedsService {
 
       if (data is List) {
         return data
-            .map((e) => BreedSummary.fromJson(e as Map<String, dynamic>))
+            .whereType<Map<String, dynamic>>()
+            .map(
+              (item) =>
+                  BreedSummary.fromJson(item, baseUrl: _dio.options.baseUrl),
+            )
             .toList();
       }
 
       if (data is Map && data['items'] is List) {
         return (data['items'] as List)
-            .map((e) => BreedSummary.fromJson(e as Map<String, dynamic>))
+            .whereType<Map<String, dynamic>>()
+            .map(
+              (item) =>
+                  BreedSummary.fromJson(item, baseUrl: _dio.options.baseUrl),
+            )
             .toList();
       }
 
@@ -44,5 +50,33 @@ class BreedsService {
       // ...
       rethrow;
     }
+  }
+
+  Future<BreedSummary> getBreedBySlug(String slug) async {
+    try {
+      final encodedSlug = Uri.encodeComponent(slug);
+      final res = await _dio.get('/breeds/$encodedSlug');
+      return _parseBreed(res.data, '/breeds/$slug');
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<BreedSummary> getBreedByLabel(String label) async {
+    try {
+      final encodedLabel = Uri.encodeComponent(label);
+      final res = await _dio.get('/breeds/by-label/$encodedLabel');
+      return _parseBreed(res.data, '/breeds/by-label/$label');
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  BreedSummary _parseBreed(Object? data, String endpoint) {
+    if (data is Map<String, dynamic>) {
+      return BreedSummary.fromJson(data, baseUrl: _dio.options.baseUrl);
+    }
+
+    throw Exception('Formato de respuesta no esperado en $endpoint');
   }
 }
