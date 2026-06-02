@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:aura_pet/src/widgets/app_background.dart';
@@ -146,6 +148,16 @@ class _CollectionPageState extends State<CollectionPage> {
         lifeSpan: breed.lifeSpan,
         confidence: null, // aquí normalmente no hay confianza de IA
       ),
+    );
+  }
+
+  void _openSidekickDogChat() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.28),
+      builder: (_) => const _SidekickDogChatSheet(),
     );
   }
 
@@ -447,6 +459,14 @@ class _CollectionPageState extends State<CollectionPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5ECE6),
       body: AppBackground(opacity: 0.04, child: body),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'sidekickDogChatFab',
+        onPressed: _openSidekickDogChat,
+        backgroundColor: const Color(0xFF6ECFF8),
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.pets_rounded),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: const AppNavigationBar(currentIndex: 0),
     );
   }
@@ -708,3 +728,245 @@ String? _breedSizeLabel(String? rawSize) {
 }
 
 enum BreedSizeFilter { all, small, medium, large }
+
+class _ChatMessage {
+  final String text;
+  final bool isUser;
+
+  const _ChatMessage({required this.text, required this.isUser});
+}
+
+class _SidekickDogChatSheet extends StatefulWidget {
+  const _SidekickDogChatSheet();
+
+  @override
+  State<_SidekickDogChatSheet> createState() => _SidekickDogChatSheetState();
+}
+
+class _SidekickDogChatSheetState extends State<_SidekickDogChatSheet> {
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final List<_ChatMessage> _messages = [
+    const _ChatMessage(
+      text:
+          'Hola, soy sidekickDog. Todavía estoy en preparación, pero puedo acompañarte mientras exploras las razas.',
+      isUser: false,
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  void _sendMessage() {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _messages.add(_ChatMessage(text: text, isUser: true));
+      _messages.add(
+        const _ChatMessage(
+          text:
+              'sidekickDog aún no está conectado a una IA real, pero esta ventana ya queda lista para hacerlo.',
+          isUser: false,
+        ),
+      );
+      _messageController.clear();
+    });
+
+    _scrollToBottom();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: AppBackground(
+          opacity: 0.06,
+          alignment: Alignment.topLeft,
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(bottom: bottomInset),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        height: 42,
+                        width: 42,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD7F0FF),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF89CFF0,
+                            ).withValues(alpha: 0.7),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.pets_rounded,
+                          color: Color(0xFF1F7BCB),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'sidekickDog',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Asistente conversacional en preparación',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFF4E6F86),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                        color: const Color(0xFF4E6F86),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView.separated(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    itemCount: _messages.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return Align(
+                        alignment: message.isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: message.isUser
+                                  ? const Color(0xFFD8ECFF)
+                                  : const Color(0xFFF1F6FB),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: message.isUser
+                                    ? const Color(0xFF8AC8F0)
+                                    : const Color(0xFFD1DCE6),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              message.text,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFF17324D),
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FBFF),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: const Color(0xFF91C5E8),
+                        width: 1.1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            minLines: 1,
+                            maxLines: 4,
+                            decoration: const InputDecoration(
+                              hintText: 'Escribe un mensaje...',
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Material(
+                          color: const Color(0xFF6ECFF8),
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            onPressed: _sendMessage,
+                            icon: Transform.rotate(
+                              angle: -math.pi / 2,
+                              child: const Icon(
+                                Icons.send_rounded,
+                                color: Colors.white,
+                              ),
+                            ),
+                            tooltip: 'Enviar mensaje',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
