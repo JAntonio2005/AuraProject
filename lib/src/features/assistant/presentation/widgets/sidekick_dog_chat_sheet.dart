@@ -454,34 +454,65 @@ class _SuggestedFollowups extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxChipWidth = constraints.maxWidth < 260
             ? constraints.maxWidth
             : 260.0;
 
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: followups
-              .map(
-                (followup) => ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxChipWidth),
-                  child: ActionChip(
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                    label: Text(
-                      followup,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Para orientarte mejor, dime:',
+              style: textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF5F6D78),
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: followups
+                  .map(
+                    (followup) => ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxChipWidth),
+                      child: ActionChip(
+                        avatar: const Icon(
+                          Icons.help_outline_rounded,
+                          size: 16,
+                        ),
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: colorScheme.outlineVariant),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        labelPadding: const EdgeInsets.only(right: 6),
+                        labelStyle: textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF17324D),
+                          height: 1.2,
+                        ),
+                        label: Text(
+                          followup,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                        ),
+                        onPressed: () => onFollowup(followup),
+                      ),
                     ),
-                    onPressed: () => onFollowup(followup),
-                  ),
-                ),
-              )
-              .toList(growable: false),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
         );
       },
     );
