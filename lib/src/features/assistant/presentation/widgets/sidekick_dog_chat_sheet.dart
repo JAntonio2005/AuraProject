@@ -211,7 +211,6 @@ class _SidekickDogChatSheetState extends State<SidekickDogChatSheet> {
                         onRetry: message.retryText == null
                             ? null
                             : () => _sendMessage(message.retryText!),
-                        onFollowup: _sendMessage,
                       );
                     },
                   ),
@@ -289,13 +288,8 @@ class _ChatHeader extends StatelessWidget {
 class _MessageBubble extends StatelessWidget {
   final _ChatMessage message;
   final VoidCallback? onRetry;
-  final ValueChanged<String> onFollowup;
 
-  const _MessageBubble({
-    required this.message,
-    required this.onRetry,
-    required this.onFollowup,
-  });
+  const _MessageBubble({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -335,7 +329,6 @@ class _MessageBubble extends StatelessWidget {
                   message: message,
                   theme: textTheme,
                   onRetry: onRetry,
-                  onFollowup: onFollowup,
                 ),
         ),
       ),
@@ -367,13 +360,11 @@ class _MessageContent extends StatelessWidget {
   final _ChatMessage message;
   final TextTheme theme;
   final VoidCallback? onRetry;
-  final ValueChanged<String> onFollowup;
 
   const _MessageContent({
     required this.message,
     required this.theme,
     required this.onRetry,
-    required this.onFollowup,
   });
 
   @override
@@ -399,10 +390,7 @@ class _MessageContent extends StatelessWidget {
         ],
         if (message.suggestedFollowups.isNotEmpty) ...[
           const SizedBox(height: 10),
-          _SuggestedFollowups(
-            followups: message.suggestedFollowups,
-            onFollowup: onFollowup,
-          ),
+          _SuggestedFollowups(followups: message.suggestedFollowups),
         ],
         if (onRetry != null) ...[
           const SizedBox(height: 10),
@@ -445,76 +433,57 @@ class _VetNotice extends StatelessWidget {
 
 class _SuggestedFollowups extends StatelessWidget {
   final List<String> followups;
-  final ValueChanged<String> onFollowup;
 
-  const _SuggestedFollowups({
-    required this.followups,
-    required this.onFollowup,
-  });
+  const _SuggestedFollowups({required this.followups});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxChipWidth = constraints.maxWidth < 260
-            ? constraints.maxWidth
-            : 260.0;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Para orientarte mejor, dime:',
-              style: textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF5F6D78),
-                fontWeight: FontWeight.w600,
-                height: 1.25,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: followups
-                  .map(
-                    (followup) => ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: maxChipWidth),
-                      child: ActionChip(
-                        avatar: const Icon(
-                          Icons.help_outline_rounded,
-                          size: 16,
-                        ),
-                        backgroundColor: Colors.white,
-                        side: BorderSide(color: colorScheme.outlineVariant),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelPadding: const EdgeInsets.only(right: 6),
-                        labelStyle: textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF17324D),
-                          height: 1.2,
-                        ),
-                        label: Text(
-                          followup,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          softWrap: true,
-                        ),
-                        onPressed: () => onFollowup(followup),
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Para orientarte mejor, dime:',
+          style: textTheme.bodySmall?.copyWith(
+            color: const Color(0xFF5F6D78),
+            fontWeight: FontWeight.w600,
+            height: 1.25,
+          ),
+        ),
+        const SizedBox(height: 6),
+        ...followups.map(
+          (followup) => Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '•',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF5F6D78),
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    followup,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF17324D),
+                      height: 1.3,
                     ),
-                  )
-                  .toList(growable: false),
+                  ),
+                ),
+              ],
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }
