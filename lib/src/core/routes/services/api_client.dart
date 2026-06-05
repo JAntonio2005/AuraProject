@@ -1,8 +1,5 @@
 // lib/src/core/services/api_client.dart
-import 'dart:io' show Platform;
-
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 String _resolveBaseUrl() {
@@ -42,8 +39,9 @@ class ApiClient {
     dio = Dio(
       BaseOptions(
         baseUrl: _resolveBaseUrl(),
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 90),
       ),
     );
 

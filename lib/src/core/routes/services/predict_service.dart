@@ -14,9 +14,10 @@ class PredictService {
 
   /// POST /predict con Bearer Token (se agrega solo por el interceptor)
   Future<PredictResponse> predict(File imageFile) async {
+    final stopwatch = Stopwatch()..start();
     try {
       if (kDebugMode) {
-        debugPrint('[PredictService] Enviando imagen: ${imageFile.path}');
+        debugPrint('[PredictService] Iniciando /predict: ${imageFile.path}');
       }
 
       final formData = FormData.fromMap({
@@ -26,17 +27,15 @@ class PredictService {
         ),
       });
 
-      final response = await _dio.post(
-        '/predict',
-        data: formData,
-        queryParameters: {'enrich': true},
-      );
+      final response = await _dio.post('/predict', data: formData);
+      stopwatch.stop();
 
       if (kDebugMode) {
         debugPrint(
-          '[PredictService] Respuesta /predict: '
-          '${response.statusCode} | ${response.data}',
+          '[PredictService] /predict completado en '
+          '${stopwatch.elapsedMilliseconds} ms | status ${response.statusCode}',
         );
+        debugPrint('[PredictService] Respuesta /predict: ${response.data}');
       }
 
       return PredictResponse.fromJson(
@@ -44,7 +43,12 @@ class PredictService {
         baseUrl: _dio.options.baseUrl,
       );
     } on DioException catch (e) {
+      stopwatch.stop();
       if (kDebugMode) {
+        debugPrint(
+          '[PredictService] /predict falló tras '
+          '${stopwatch.elapsedMilliseconds} ms',
+        );
         debugPrint('[PredictService] Dio error type: ${e.type}');
         debugPrint('[PredictService] Dio message: ${e.message}');
         debugPrint('[PredictService] Dio response: ${e.response?.data}');
