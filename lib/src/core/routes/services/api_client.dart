@@ -1,14 +1,18 @@
 // lib/src/core/services/api_client.dart
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+const String _defaultBaseUrl = 'https://aura-ml-api-rag-ollama.onrender.com';
 
 String _resolveBaseUrl() {
   const envBaseUrl = String.fromEnvironment('BASE_URL', defaultValue: '');
-  if (envBaseUrl.isNotEmpty) {
-    return envBaseUrl;
+  final configuredBaseUrl = envBaseUrl.trim();
+  if (configuredBaseUrl.isNotEmpty) {
+    return configuredBaseUrl;
   }
 
-  return 'https://aura-ml-api-latest.onrender.com';
+  return _defaultBaseUrl;
 }
 
 class AuthInterceptor extends Interceptor {
@@ -47,8 +51,8 @@ class ApiClient {
 
     dio.interceptors.add(AuthInterceptor());
 
-    // DEBUG: para estar 100% seguros
-    // ignore: avoid_print
-    print('[ApiClient] baseUrl = ${dio.options.baseUrl}');
+    if (kDebugMode) {
+      debugPrint('[ApiClient] baseUrl = ${dio.options.baseUrl}');
+    }
   }
 }
